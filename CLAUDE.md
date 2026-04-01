@@ -2,344 +2,364 @@
 
 ## Purpose
 
-This repository contains two separate but related deliverables:
+This project provides a Go program plus a Claude plugin layer that configures Claude Code integration artifacts such as hooks, templates, and global include wiring.
 
-1. The `mnemo` Go binary.
-2. The Claude Code plugin metadata and hooks.
+The repository must always be treated as a two-phase system:
 
-They are intentionally separate.
-The plugin cannot replace the binary setup flow.
-Do not "simplify" the architecture by merging responsibilities that are separated on purpose.
+1. Go binary lifecycle
+2. Claude plugin lifecycle
 
-## Non-negotiable project rules
+Any change that affects installation, upgrade, versioning, packaging, setup, or documentation must evaluate both phases explicitly.
 
-### 1. Do not confuse plugin responsibilities with binary responsibilities
+---
 
-The Claude plugin is responsible for plugin metadata, hooks, and MCP-related integration.
+## Non-negotiable product rules
 
-The Go binary is responsible for setup tasks that the plugin cannot perform reliably by itself, including user environment setup and file modifications such as include/protocol installation.
+### 1. Always treat installation and upgrade as two phases
 
-Never report the separation between binary and plugin as a design bug by default.
-Only flag issues when both parts become inconsistent with each other.
+Never describe installation as a single opaque action if it actually consists of:
 
-### 2. Before changing hooks, verify real script names and paths
+- installing or updating the Go binary
+- installing or updating the Claude plugin that configures hooks, templates, and global Claude integration
 
-When editing or reviewing hook definitions:
+Any implementation, fix, release, or documentation change must preserve this distinction.
 
-- verify the exact filename exists
-- verify the hook path matches the actual shipped script
-- verify naming consistency between:
-  - `plugin/claude-code/hooks/hooks.json`
-  - shipped plugin script paths
-  - installer/setup code
-  - tests
+If global Claude integration depends on injecting or maintaining an include in the user's global `CLAUDE.md`, that requirement must be treated as part of plugin installation, not as an optional footnote.
 
-Do not assume similar names are interchangeable.
+Do not collapse binary installation and plugin installation into one conceptual step.
+Do not imply the plugin works correctly without the Go program being present.
+Do not imply the Go program alone completes Claude integration.
 
-Known example of a prior failure:
-- `post-compaction.sh` was referenced in hook config
-- real script name was `post-compact.sh`
+### 2. Version consistency is mandatory
 
-This class of error must be treated as critical.
+When creating or updating a version, all version references that are expected to expose or describe the current version must be updated together.
 
-### 3. Never change version references partially
+Never update only one visible version string and leave others behind.
+Never assume a tag alone is enough.
+Never assume `main.go` alone is enough.
+Never assume `plugin.json` alone is enough.
+Never assume README examples can lag behind.
 
-When preparing a new version, do not stop after updating only one file.
-Search the repository for the exact current version and update every required release metadata location.
+The repository must not ship inconsistent visible versions across code, plugin metadata, installation examples, templates, scripts, or release artifacts.
 
-At minimum, verify these files:
+If a new version is created, explicitly verify all files that reference the version and update them before considering the work complete.
 
-- `.claude-plugin/marketplace.json`
-- `.claude-plugin/plugin.json`
-- `plugin/claude-code/.claude-plugin/plugin.json`
+Examples of places that commonly require review:
 
-Also verify that the release tag matches the intended versioning scheme used by CI/release automation.
+- Go source version constant or variable
+- plugin manifest files such as `plugin.json`
+- README installation or upgrade examples
+- docs that print example version output
+- release workflow metadata
+- scripts that embed a version
+- templates rendered into user environments
+- package manager metadata
+- Git tags and release titles
 
-Before considering a version bump complete:
-- search for the old version string across the full repository
-- confirm no stale copies remain in release metadata
-- confirm the binary version source still aligns with release tagging
+This list is illustrative, not exhaustive.
+The rule is consistency across every version-bearing surface, not consistency across only a preferred subset.
 
-### 4. Treat version metadata as a consistency boundary
+### 3. Do not oversell the product
 
-The binary version and plugin version metadata must not silently drift.
+Do not use inflated claims, vague marketing language, or statements that suggest capabilities the code does not actually implement.
 
-If a release changes version metadata:
-- verify plugin metadata files are aligned
-- verify release workflow behavior is aligned
-- verify install/update paths still resolve the correct published version
+Avoid terms such as:
 
-If any of those are inconsistent, report it explicitly.
+- intelligent compression
+- semantic optimization
+- smart deduplication
+- zero-cost abstraction
+- zero dependencies
 
-### 5. Keep documentation accurate about what the plugin really does
+unless those claims are demonstrably true in the implementation and remain true across supported installation paths.
 
-Do not state that the plugin performs actions that are actually done by the binary setup flow.
+If the system reduces output through line filtering, truncation, grouping, exclusion rules, comment stripping, or similar techniques, describe it honestly as heuristic pruning, heuristic filtering, or heuristic output reduction.
 
-When editing README or installation docs:
-- distinguish clearly between binary installation
-- plugin installation
-- hook registration
-- setup-side file modifications
-- MCP/profile configuration
+Prefer precise wording over attractive wording.
 
-If the plugin depends on the binary being installed and available in `PATH`, state that explicitly and near the plugin installation steps.
+Good:
+- heuristic pruning of noisy tool output
+- rule-based reduction of shell output before it reaches Claude
+- deterministic filtering and truncation to reduce context waste
 
-### 6. Project identity derivation must stay consistent across hooks
+Bad:
+- intelligent context optimization
+- semantic compression engine
+- smart deduplication pipeline
 
-Project identity derivation is shared behavior and must remain consistent across all hooks.
+### 4. Never claim features that are only partially implemented
 
-Current expected behavior:
-- if the current working directory is inside `HOME`, derive the project name from the full path relative to `HOME`
-- if the current working directory is outside `HOME`, derive it from the current working directory location
-
-If one hook derives `PROJECT` differently from another, that is a bug.
-
-When touching any hook or setup logic that derives project identity:
-- compare all related scripts
-- preserve the same derivation strategy everywhere
-- preserve the same normalization rules everywhere
-- avoid inconsistent fallback logic that changes the resulting key shape between execution contexts beyond the defined HOME-relative / CWD fallback behavior
-
-Any change in project identity derivation must be treated as a storage compatibility change, because it can fragment or orphan stored memory/context for the same project.
-
-### 7. Tests must validate the shipped plugin, not only installer internals
-
-When adding or updating tests, ensure they cover actual user-facing deliverables.
-
-Do not stop at testing embedded installer assets.
-Also validate:
-- plugin hook configuration references existing script files
-- shipped plugin metadata is internally consistent
-- expected filenames in hook JSON match actual filenames
-- release metadata files stay aligned
-
-If a real shipped file can be wrong while tests still pass, test coverage is insufficient.
-
-## Functional verification before commit
-
-Changes must not be considered complete just because the code builds or unit tests pass.
-
-For this repository, every change affecting hooks, plugin metadata, setup/install flows, versioning, or memory behavior must be functionally verified before commit.
-
-### 8. Run functional checks before every commit that touches behavior
-
-If a change affects any of the following:
-
-- hook scripts
-- `plugin/claude-code/**`
-- `.claude-plugin/**`
-- setup/install code
-- release/version metadata
-- project identity derivation
-- memory persistence or restore flows
-- README installation or usage instructions
-
-you must perform functional verification before committing.
-
-Do not rely only on static review.
-
-### 9. Minimum pre-commit verification standard
-
-Before committing a behavioral change, verify all that apply:
-
-- the project builds successfully
-- relevant automated tests pass
-- the affected hook or setup flow works end-to-end
-- changed documentation still matches actual behavior
-- no previously working path was broken by the fix
-
-A fix is incomplete if it solves the reported issue but breaks:
-- another hook
-- another install path
-- version consistency
-- project identity consistency
-- restore/persistence behavior
-- plugin validation
-
-### 10. Test the user-visible workflow, not only isolated code
-
-For this repository, functional validation should prioritize real user flows.
+If a feature exists only in one module, one code path, one command family, or one experimental workflow, do not present it as a general property of the whole system.
 
 Examples:
-- if a hook definition changes, validate that the hook can actually execute the referenced script
-- if a script filename changes, validate every place that references it
-- if setup logic changes, validate the installed result, not only the internal function
-- if version metadata changes, validate all published metadata files together
-- if project identity logic changes, validate that the same project resolves to the same key across all related hooks
-- if README installation steps change, validate that the documented flow still works as written
+- If truncation exists but true deduplication is not implemented globally, do not claim global deduplication.
+- If gain tracking exists separately but is not integrated as a guaranteed workflow behavior, do not describe it as an always-on capability.
+- If a setup step is conditional or platform-specific, document that constraint explicitly.
 
-### 11. Required mindset for fixes
+### 5. Documentation must describe reality, not intention
 
-When fixing a bug, do not stop after confirming the original bug is gone.
+README, plugin docs, templates, help text, release notes, and setup guides must reflect what the code does now.
 
-Also verify:
-- adjacent flows
-- reverse flows
-- fallback paths
-- reinstall/update scenarios
-- previously supported paths
+Do not leave “aspirational” wording in user-facing docs.
+Do not document future behavior in present tense.
+Do not keep stale examples after changing actual behavior.
 
-Every bug fix must include regression thinking.
+If implementation and docs disagree, fix the disagreement, not just the symptom.
 
-### 12. Prefer small verification matrices for risky changes
+---
 
-For changes that touch shared behavior, explicitly verify the main execution contexts.
+## Installation and setup rules
 
-At minimum, cover the relevant combinations such as:
-- binary setup path
-- plugin-installed path
-- hook execution path
-- fresh install
-- existing install/update
-- inside `HOME`
-- outside `HOME`
+### 6. Binary and plugin responsibilities must stay separated
 
-Do not assume one successful path proves the others.
+The Go binary is responsible for executable behavior.
+The plugin is responsible for Claude integration behavior such as hooks, templates, and global include setup.
 
-### 13. No commit without stating what was verified
+When changing install flows, do not blur these responsibilities.
 
-For behavioral changes, the commit or PR description must state what was actually verified.
+Document them separately.
+Test them separately.
+Version them consistently.
+Reason about failure modes separately.
 
-Include concise verification notes such as:
-- build completed
-- tests passed
-- plugin hook path validated
-- setup flow validated
-- version metadata aligned
-- project identity behavior checked in `HOME` and outside `HOME`
+### 7. Global Claude include handling is part of the plugin contract
 
-Do not claim completion without verification evidence.
+If the plugin injects or maintains an include inside the user's global `CLAUDE.md`, that behavior is core setup logic.
 
-### 14. Patch and minor releases must be regression-sensitive
+Changes touching include injection must verify:
 
-Patch and minor releases must not be treated as safe by default.
+- include creation works when absent
+- include update works when already present
+- duplicate include insertion does not occur
+- path resolution rules remain correct
+- uninstall or reinstall does not leave broken state
+- behavior is correct whether the project lives inside or outside the user's home path rules
 
-Even a small release may break:
-- hook wiring
-- plugin metadata
-- install flows
-- memory restore
-- version coherence
+### 8. Path-derived naming must follow project rules exactly
 
-For patch and minor changes:
-- verify the exact fix
-- verify nearby behavior
-- verify release metadata consistency
-- verify user-facing installation/use paths still work
+If project naming is derived from filesystem location, always apply the current canonical repository rule:
 
-### 15. If functionality was not verified, say so explicitly
+- when inside home, derive from the full path from home
+- when outside home, derive from the current working directory base path rule defined by the project
 
-If full functional verification could not be performed, do not imply confidence that has not been earned.
+Do not simplify naming logic in docs or code examples.
+Do not hardcode examples that contradict the rule.
+Do not silently replace canonical naming with a prettier naming scheme.
 
-State clearly:
-- what was verified
-- what was not verified
-- what remains at risk
+If touching name generation logic, update docs and examples accordingly.
 
-Never present an unverified behavioral change as complete.
+---
 
-## Required workflow before making changes
+## Versioning rules
 
-Before modifying any of these areas:
-- release versioning
-- plugin metadata
-- hook configuration
-- setup/install behavior
-- README installation docs
+### 9. A version bump is not complete until all version surfaces are checked
 
-you must do all of the following:
+Any task that creates, bumps, or references a version must include an explicit repository-wide review of version-bearing files.
 
-1. Read the relevant files completely.
-2. Search the repository for duplicated references.
-3. Identify all sources of truth and all derived artifacts.
-4. State explicitly which files must remain aligned.
-5. Only then apply changes.
+Minimum expectation:
+- search the repository for the previous version
+- search the repository for version display patterns
+- inspect manifests, docs, scripts, templates, and source constants
+- verify the release/tag matches what the repository exposes
 
-## Required workflow before opening a PR
+Do not stop after updating the first obvious file.
 
-For any PR that affects versions, hooks, setup, plugin metadata, install docs, or runtime behavior, verify:
+### 10. Examples must not leak old versions
 
-- hook filenames are exact
-- hook paths exist
-- status messages describe the real action being executed
-- version strings are updated in every required metadata file
-- release/tag behavior remains coherent
-- README language matches actual behavior
-- project identity derivation remains consistent
-- tests cover shipped plugin artifacts, not just internal installer data
-- functional behavior was validated in the affected user flow
-- the fix did not break adjacent or previously working paths
+Examples in documentation are part of the user-facing version surface.
 
-## Review checklist
+If the README says one version, the plugin manifest says another, and the binary prints another, that is a release defect.
 
-Use this checklist in every relevant task.
+Treat stale examples as correctness issues, not cosmetic issues.
 
-### Hook changes
-- Is every referenced script real?
-- Do filenames match exactly?
-- Do hook messages match actual behavior?
-- Are plugin config and setup logic aligned?
+---
 
-### Version bumps
-- Did I search for the previous version across the repository?
-- Did I update all required plugin metadata files?
-- Does release automation still derive the correct binary version?
-- Is there any stale version left in release-facing metadata?
+## Testing and validation rules
 
-### Documentation changes
-- Does the text distinguish plugin vs binary responsibilities correctly?
-- Does it avoid claiming the plugin performs setup-only actions?
-- Are prerequisites stated close to the relevant install step?
+### 11. Functional validation is required before commit when behavior changes
 
-### Identity/storage changes
-- Is `PROJECT` computed consistently everywhere?
-- Could this change fragment stored memory/context?
-- Are fallback paths normalized identically?
+For any change affecting setup, installation, hooks, filters, templates, versioning, path handling, manifests, or generated user files, perform functional validation before commit.
 
-### Testing
-- Do tests validate what users actually install?
-- Can hook/script mismatches still slip through?
-- Are metadata alignment checks covered?
+Do not rely only on compilation.
+Do not rely only on unit tests if the change affects integration behavior.
+Do not assume a patch or minor release is low risk.
 
-### Functional verification
-- Did I test the real affected workflow end-to-end?
-- Did I verify both the direct fix and nearby paths?
-- Did I test the shipped artifact, not only internal code?
-- Did I verify update/reinstall implications if relevant?
-- Am I sure this patch/minor change does not introduce a new regression?
+At minimum, validate the behavior actually changed by the work.
 
-## Preferred behavior when analyzing this repository
+Examples of functional validation:
+- install binary, then install plugin, and confirm both phases work
+- verify hook registration really occurs
+- verify include injection really occurs
+- verify duplicate include injection does not occur
+- verify an upgrade path updates existing state correctly
+- verify a version bump is reflected everywhere expected
+- verify generated files match the current templates
+- verify command output still matches documented examples when relevant
 
-When you review this project:
-- be conservative with architectural criticism
-- do not invent simplifications that break the binary/plugin separation
-- focus on concrete inconsistencies
-- prioritize exactness over broad refactors
-- prefer repository-wide verification over local assumptions
+### 12. Patch and minor releases must still be treated as potentially breaking
 
-## Anti-patterns to avoid
+Small version increments often fix one bug and introduce another.
 
-Do not:
-- claim the binary/plugin split is inherently wrong
-- rename scripts without checking all references
-- update only one version file
-- trust tests that ignore shipped plugin files
-- change docs without checking actual implementation
-- introduce a second way to derive project identity
-- assume release metadata is centralized if it is not
+Therefore:
+- do not assume patch means safe
+- do not assume minor means documentation-only impact
+- do not skip functional tests because the diff looks small
 
-## Expected output style for this repository
+Any release that changes install flow, generated files, matching logic, filtering, version references, or plugin behavior must be functionally tested.
 
-When reporting issues or proposing fixes:
-- list exact files
-- describe the concrete inconsistency
-- explain user impact
-- propose the minimal correct fix
-- distinguish bug, documentation issue, and design issue
+### 13. Test the real user path, not only internal helpers
 
-Avoid vague statements such as:
-- "there is duplication"
-- "this should be simplified"
-- "the plugin should do everything"
+If the user experience depends on commands executed in sequence, test the sequence, not only isolated functions.
 
-Be precise.
+Typical real path:
+1. install or update Go binary
+2. install or update Claude plugin
+3. verify generated Claude integration files
+4. verify global `CLAUDE.md` include state
+5. verify hooks actually execute
+6. verify output pruning behavior is still correct
+
+A helper passing in isolation is not enough if the end-to-end path fails.
+
+---
+
+## Editing rules for agents
+
+### 14. Prefer repository-wide consistency over local fixes
+
+When editing one file, always consider whether the same concept appears elsewhere.
+
+Typical cross-file consistency areas:
+- version strings
+- installation wording
+- plugin terminology
+- setup flow descriptions
+- claims about filtering behavior
+- generated template content
+- command examples
+- path naming logic
+
+Do not make a local wording fix that leaves contradictory wording elsewhere.
+
+### 15. Be explicit about what is heuristic
+
+Whenever describing output reduction behavior, prefer precise, bounded language.
+
+Use:
+- heuristic pruning
+- rule-based filtering
+- deterministic truncation
+- comment stripping
+- output grouping
+- noise reduction
+
+Avoid:
+- semantic understanding
+- intelligent summarization
+- deduplication
+
+unless the implementation truly supports those claims in the relevant scope.
+
+### 16. Do not invent abstractions the project does not need
+
+Do not introduce broader architectural language unless it solves a real repository problem.
+
+Keep terminology simple:
+- binary
+- plugin
+- hook
+- template
+- install
+- upgrade
+- version
+- heuristic pruning
+
+This project benefits from clarity, not conceptual inflation.
+
+---
+
+## Commit and release hygiene
+
+### 17. Before finalizing a change, verify these questions
+
+- Does this preserve the two-phase install model?
+- Does plugin setup still depend on and correctly integrate with the Go binary?
+- Are global include behaviors still correct?
+- Are all version references consistent?
+- Does documentation describe current behavior exactly?
+- Are any claims overstated?
+- Was the changed behavior functionally tested?
+- Are examples still valid?
+
+If any answer is “no” or “unknown”, the work is not complete.
+
+### 18. Never close a versioning task on partial repository updates
+
+A task about “bump version”, “prepare release”, “update plugin”, “refresh docs”, or similar is incomplete if any visible version reference still points to an older version.
+
+### 19. Never close a setup task on a simulated path only
+
+If a task changes installation or upgrade behavior, completion requires validating the actual user path, not just code compilation or manifest editing.
+
+---
+
+## Examples
+
+### Example: correct installation wording
+
+Good:
+1. Install or update the Go binary.
+2. Install or update the Claude plugin so hooks, templates, and global `CLAUDE.md` include wiring are configured.
+
+Bad:
+Install the plugin and everything is ready.
+
+Bad:
+Run the Go installer to fully configure Claude integration.
+
+### Example: correct product wording
+
+Good:
+This tool applies heuristic pruning to noisy tool output before it reaches Claude Code.
+
+Good:
+The hook uses deterministic filtering and truncation rules to reduce wasted context.
+
+Bad:
+This tool performs intelligent semantic compression of shell output.
+
+Bad:
+This tool deduplicates and optimizes all output automatically.
+
+### Example: correct versioning behavior
+
+Good:
+Update the Go version constant, plugin manifest, README examples, template output, and release tag together.
+
+Bad:
+Create tag `vX.Y.Z` and update only `main.go`.
+
+### Example: correct release validation
+
+Good:
+After bumping the version, search the repository for the old version string and verify no stale references remain in source, docs, manifests, scripts, or templates.
+
+Bad:
+Assume CI or the tag name proves the repository is consistent.
+
+---
+
+## Default working stance
+
+When modifying this repository:
+
+- assume installation is two-phase
+- assume version consistency must be enforced globally
+- assume docs must be literal and precise
+- assume marketing wording is harmful unless proven true
+- assume small releases can still break behavior
+- assume functional validation is required for user-facing changes
+
+If there is tension between attractive wording and accurate wording, choose accurate wording.
+If there is tension between a quick local fix and repository-wide consistency, choose consistency.
+If there is tension between “probably works” and “validated”, choose validation.
