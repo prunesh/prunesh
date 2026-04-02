@@ -1,11 +1,5 @@
-## gtk-ai — compresión de tokens
+## gtk-ai — token compression
 
-gtk-ai está activo como PostToolUse hook. Intercepta la salida de Bash, grep, find, ls, git y herramientas MCP antes de que entre en el contexto, aplicando deduplicación y truncado cuando supera el tamaño útil.
+gtk-ai is active as a PostToolUse hook. It intercepts Bash, grep, find, ls, git, and MCP tool output before it enters the context. Depending on the command, it applies truncation, extension grouping, condensed formatting, or comment line removal.
 
-La compresión es transparente: no necesitas adaptar tu comportamiento.
-
-Para ver el ahorro acumulado en la sesión actual:
-
-```bash
-gtkai gain
-```
+Compression is transparent: no changes to your workflow are needed.

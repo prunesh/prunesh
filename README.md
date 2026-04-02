@@ -1,14 +1,14 @@
 # gtk-ai
 
 ![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat&logo=go&logoColor=white)
-![Version](https://img.shields.io/badge/version-0.1.0-blue?style=flat)
+![Version](https://img.shields.io/badge/version-0.2.0-blue?style=flat)
 ![License](https://img.shields.io/badge/license-Apache%202.0-blue?style=flat)
 ![Claude Code](https://img.shields.io/badge/Claude%20Code-hook%20compatible-blueviolet?style=flat)
 ![Build](https://img.shields.io/badge/build-passing-brightgreen?style=flat)
 
-**Go Token Killer**: modular token compression proxy for Claude Code. Single binary, zero dependencies, plug-and-play.
+**Go Token Killer**: modular token compression proxy for Claude Code. Single binary, no runtime dependencies, plug-and-play.
 
-gtkai sits between Claude Code and your shell as a `PostToolUse` hook. It intercepts command output before it reaches the agent, compresses it to the relevant parts, and records the savings. The less Claude reads, the less you pay.
+gtkai sits between Claude Code and your shell as a `PostToolUse` hook. It intercepts command output before it reaches the agent and compresses it to the relevant parts. The less Claude reads, the less you pay.
 
 ```
 Claude → Bash("find . -name '*.rs'")
@@ -29,30 +29,19 @@ Claude → Bash("find . -name '*.rs'")
 
 ## Benchmark
 
-Measured against raw shell output on a real Rust codebase (76 files):
+Numbers from `go test ./internal/hook/... -v`. Token estimate: ~4 chars/token.
 
-| Command | Raw output | gtkai | Savings |
+| Input | Tokens before | Tokens after | Savings |
 |---|---|---|---|
-| `find . -name "*.rs"` | ~4,200 tokens | ~300 tokens | **~93%** |
-| `ls src/` | ~800 tokens | ~120 tokens | **~85%** |
-| `git log --oneline` | ~1,200 tokens | ~180 tokens | **~85%** |
-| `grep -rn "savings" src/` | ~3,100 tokens | ~340 tokens | **~89%** |
+| `find` — 150 paths | 1,050 | 714 | **32%** |
+| `grep` — 250 matches across 20 files | 3,820 | 3,059 | **20%** |
+| `git diff` — 400 lines | 3,185 | 2,386 | **25%** |
+| `git log` — 80 commits | 1,917 | 1,204 | **37%** |
+| `Read` — Go file, 100 commented vars | 1,346 | 348 | **74%** |
+| `Read` — plain text, 400 lines | 2,772 | 1,380 | **50%** |
+| MCP tool response — 5,200 chars | 1,300 | 758 | **42%** |
 
-Track your own savings at any time:
-
-```bash
-gtkai gain
-```
-
-```
-gtkai Token Savings
-════════════════════════════════════════
-Total commands: 261
-Tokens in:      265.4K
-Tokens out:     66.8K
-Tokens saved:   198.8K (74.9%)
-Efficiency:     ██████████████████░░ 74.9%
-```
+Savings grow with output size. Small outputs (a few lines) may not be reduced.
 
 ## Quickstart
 
@@ -87,39 +76,16 @@ Verify:
 
 ```bash
 gtkai version
-# gtkai 0.1.0
+# gtkai 0.2.0
 ```
 
-### 2. Register the hook in Claude Code
-
-Add to `~/.claude/settings.json`:
-
-```json
-{
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Bash|mcp__.*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/gtkai-post-tool-use.sh"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-Copy the hook script:
+After installing, run:
 
 ```bash
-cp hooks/gtkai-post-tool-use.sh ~/.claude/hooks/
-chmod +x ~/.claude/hooks/gtkai-post-tool-use.sh
+gtkai setup
 ```
 
-Restart Claude Code. Done.
+This registers the marketplace, installs the plugin, and injects the context doc into your global CLAUDE.md. Restart Claude Code when done.
 
 ## Modules
 
@@ -131,7 +97,7 @@ Each module handles one command. All built-in modules ship with the binary.
 | `ls` | `ls` | Groups files by extension, separates dirs |
 | `git` | `git diff/log/status/branch` | Limits diff lines, truncates log, formats status |
 | `grep` | `grep` | Caps results, shows match count per file |
-| `gain` | — | SQLite analytics: tracks tokens in/out per command |
+| `gain` | — | SQLite analytics: tracks tokens in/out per command (not yet integrated in the hook) |
 
 ## Adding a module
 

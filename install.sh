@@ -210,5 +210,3 @@ rm -rf "$TMP_DIR"
 # ── Done ──────────────────────────────────────────────────────────────────────
 
 printf "\n${BOLD}${GREEN}gtk-ai installed successfully!${RESET}\n\n"
-info "Run 'gtkai gain' to track token savings"
-printf "\n"

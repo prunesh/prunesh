@@ -89,12 +89,12 @@ func filterStatus(output string) string {
 			continue
 		}
 		switch {
-		case strings.HasPrefix(l, "M ") || strings.HasPrefix(l, " M"):
+		case strings.HasPrefix(l, "A ") || strings.HasPrefix(l, "M "):
+			staged = append(staged, strings.TrimSpace(l[2:]))
+		case strings.HasPrefix(l, " M"):
 			modified = append(modified, strings.TrimSpace(l[2:]))
 		case strings.HasPrefix(l, "??"):
 			untracked = append(untracked, strings.TrimSpace(l[3:]))
-		case strings.HasPrefix(l, "A ") || strings.HasPrefix(l, "M "):
-			staged = append(staged, strings.TrimSpace(l[2:]))
 		}
 	}
 
@@ -113,13 +113,16 @@ func filterStatus(output string) string {
 		}
 	}
 	if sb.Len() == 0 {
-		// Fallback: return raw but truncated
 		if len(lines) > maxStatusLines {
 			return strings.Join(lines[:maxStatusLines], "\n") + fmt.Sprintf("\n... +%d lines\n", len(lines)-maxStatusLines)
 		}
 		return output
 	}
-	return sb.String()
+	result := sb.String()
+	if len(result) >= len(output) {
+		return output
+	}
+	return result
 }
 
 func filterBranch(output string) string {

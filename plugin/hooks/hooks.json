@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/gtkai-post-tool-use.sh",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/gtkai-post-tool-use.sh",
             "async": false
           }
         ]

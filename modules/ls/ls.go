@@ -62,7 +62,11 @@ func (m *Module) FilterOutput(output string) string {
 		}
 	}
 
-	return sb.String()
+	result := sb.String()
+	if len(result) >= len(output) {
+		return output
+	}
+	return result
 }
 
 func (m *Module) TokensBefore(output string) int {
