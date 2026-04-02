@@ -6,9 +6,7 @@
 ![Claude Code](https://img.shields.io/badge/Claude%20Code-hook%20compatible-blueviolet?style=flat)
 ![Build](https://img.shields.io/badge/build-passing-brightgreen?style=flat)
 
-**Go Token Killer**: modular token compression proxy for Claude Code. Single binary, no runtime dependencies, plug-and-play.
-
-gtkai sits between Claude Code and your shell as a `PostToolUse` hook. It intercepts command output before it reaches the agent and compresses it to the relevant parts. The less Claude reads, the less you pay.
+gtkai is a `PostToolUse` hook for Claude Code. It applies rule-based filtering to Bash, git, grep, find, ls, Read, and MCP tool output before it reaches the agent — truncation, grouping by extension, condensed formatting, and comment stripping depending on the command.
 
 ```
 Claude → Bash("find . -name '*.rs'")
@@ -17,15 +15,8 @@ Claude → Bash("find . -name '*.rs'")
               ↓ PostToolUse → gtkai hook-post
          📁 84 results / ext: .rs(84) / ...10 paths shown
               ↓
-         Claude receives compressed output (same information, fewer tokens)
+         Claude receives filtered output (shorter, some detail dropped)
 ```
-
-## Why Go
-
-- **Single binary**: `go build` produces one static executable, no runtime required
-- **Instant startup**: hooks run on every tool call; Go's startup time is negligible
-- **Easy distribution**: `brew install`, `curl | sh`, or drop the binary anywhere in PATH
-- **Modular by design**: each command is an independent Go package that registers itself at init time
 
 ## Benchmark
 
@@ -53,16 +44,15 @@ Savings grow with output size. Small outputs (a few lines) may not be reduced.
 curl -sSL https://raw.githubusercontent.com/jmeiracorbal/gtk-ai/main/install.sh | sh
 ```
 
-Detects your OS and architecture, downloads the binary, installs the hook, and patches `~/.claude/settings.json` automatically.
+Downloads the binary and runs `gtkai setup`, which registers the marketplace, installs the plugin, and injects the context doc into your global CLAUDE.md.
 
-**Option B: Claude Code plugin**
+**Option B: Manual binary + setup**
+
+Download the binary for your platform from [GitHub Releases](https://github.com/jmeiracorbal/gtk-ai/releases), place it in `~/.local/bin/`, then run:
 
 ```bash
-claude plugin marketplace add jmeiracorbal/gtk-ai
-claude plugin install gtk-ai@gtk-ai
+gtkai setup
 ```
-
-Registers the PostToolUse hook automatically. Requires `gtkai` in PATH — download the binary for your platform from [GitHub Releases](https://github.com/jmeiracorbal/gtk-ai/releases) and place it in `~/.local/bin/`.
 
 **Option C: Manual install** (requires Go 1.22+):
 
@@ -91,7 +81,7 @@ This registers the marketplace, installs the plugin, and injects the context doc
 
 Each module handles one command. All built-in modules ship with the binary.
 
-| Module | Command | What it compresses |
+| Module | Command | What it does |
 |---|---|---|
 | `find` | `find` | Truncates large result sets, groups by extension, shows summary |
 | `ls` | `ls` | Groups files by extension, separates dirs |
@@ -118,7 +108,7 @@ type Module struct{}
 
 func (m *Module) Name() string                        { return "mycommand" }
 func (m *Module) Rewrite(args []string) ([]string, bool) { return nil, false }
-func (m *Module) FilterOutput(output string) string   { /* compress here */ return output }
+func (m *Module) FilterOutput(output string) string   { /* filter here */ return output }
 func (m *Module) TokensBefore(output string) int      { return registry.EstimateTokens(output) }
 func (m *Module) TokensAfter(filtered string) int     { return registry.EstimateTokens(filtered) }
 ```
@@ -132,7 +122,7 @@ No other changes needed.
 
 ## MCP passthrough
 
-By default, gtkai compresses all `mcp__*` tool responses above 3,000 chars. To exempt specific tools, set `GTK_MCP_PASSTHROUGH_PATTERNS` in your shell configuration file (`.zshrc`, `.bashrc`, `.profile`, or whichever your shell uses):
+By default, gtkai truncates all `mcp__*` tool responses above 3,000 chars. To exempt specific tools, set `GTK_MCP_PASSTHROUGH_PATTERNS` in your shell configuration file (`.zshrc`, `.bashrc`, `.profile`, or whichever your shell uses):
 
 ```sh
 export GTK_MCP_PASSTHROUGH_PATTERNS="my_tool_*,other_tool"
@@ -145,7 +135,7 @@ To identify which tools to exempt, check the tool names returned by your MCP ser
 ## Commands
 
 ```
-gtkai hook-post     PostToolUse hook — reads stdin JSON, writes compressed output
+gtkai hook-post     PostToolUse hook — reads stdin JSON, writes filtered output
 gtkai gain          Token savings analytics
 gtkai version       Print version
 ```
@@ -170,7 +160,7 @@ The `registry` package is the only shared dependency between modules. Modules ne
 
 ## Works well with
 
-**[hybrid-coco](https://github.com/jmeiracorbal/hybrid-coco)**: local code intelligence for Claude Code. While gtkai compresses shell output, hybrid-coco replaces file reads and grep with index queries on code navigation. Both operate independently via separate hooks and complement each other.
+**[hybrid-coco](https://github.com/jmeiracorbal/hybrid-coco)**: local code intelligence for Claude Code. While gtkai filters shell output, hybrid-coco replaces file reads and grep with index queries on code navigation. Both operate independently via separate hooks and complement each other.
 
 ## License
 
