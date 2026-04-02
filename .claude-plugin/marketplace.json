@@ -1,7 +1,7 @@
 {
   "name": "gtk-ai",
   "metadata": {
-    "description": "Go Token Killer: modular token compression proxy for Claude Code. Intercepts PostToolUse output and compresses it — ~75-93% fewer tokens on Bash, git, grep, and find."
+    "description": "PostToolUse hook for Claude Code. Applies rule-based output reduction to Bash, git, grep, find, ls, Read, and MCP tools — truncation, grouping, and comment stripping depending on the command."
   },
   "owner": {
     "name": "jmeiracorbal",
@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "gtk-ai",
-      "description": "Token compression proxy. Intercepts Bash output (find, ls, git, grep) and compresses it before Claude reads it.",
+      "description": "PostToolUse hook that applies rule-based filtering to Bash, grep, find, ls, git, Read, and MCP tool output before it reaches the agent.",
       "version": "0.2.1",
       "author": {
         "name": "jmeiracorbal"
@@ -20,7 +20,7 @@
       "homepage": "https://github.com/jmeiracorbal/gtk-ai",
       "repository": "https://github.com/jmeiracorbal/gtk-ai",
       "license": "Apache-2.0",
-      "keywords": ["tokens", "compression", "hook", "productivity"]
+      "keywords": ["hook", "output-filtering", "pruning", "productivity"]
     }
   ]
 }

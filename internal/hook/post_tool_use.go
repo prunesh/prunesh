@@ -1,5 +1,5 @@
 // Package hook implements the PostToolUse handler for Claude Code.
-// A single hook process handles both Bash output compression and MCP passthrough.
+// A single hook process handles Bash output filtering, Read filtering, and MCP passthrough.
 package hook
 
 import (
@@ -85,7 +85,7 @@ func matchesPassthrough(toolName string, patterns []string) bool {
 
 // ── Run ───────────────────────────────────────────────────────────────────────
 
-// Run reads a PostToolUse event from r, compresses if needed, writes result to w.
+// Run reads a PostToolUse event from r, applies filtering if needed, writes result to w.
 // Returns true if output was modified.
 func Run(r io.Reader, w io.Writer) (bool, error) {
 	data, err := io.ReadAll(r)
@@ -181,7 +181,7 @@ func handleMCP(input hookInput, w io.Writer) (bool, error) {
 		toolName = parts[2]
 	}
 
-	// Passthrough: don't compress these tools
+	// Passthrough: don't filter these tools
 	if matchesPassthrough(toolName, passthroughPatterns()) {
 		return false, nil
 	}

@@ -17,7 +17,7 @@ type Module interface {
 	// Returns (rewritten, true) if rewritten, ("", false) if no change needed.
 	Rewrite(args []string) ([]string, bool)
 
-	// FilterOutput compresses the command output before it reaches the agent.
+	// FilterOutput applies heuristic pruning to command output before it reaches the agent.
 	// Returns the filtered output.
 	FilterOutput(output string) string
 

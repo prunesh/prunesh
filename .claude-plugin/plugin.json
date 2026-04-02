@@ -1,6 +1,6 @@
 {
   "name": "gtk-ai",
-  "description": "Token compression proxy. Intercepts Bash, grep, find, ls, git and MCP tool output and compresses it before Claude reads it.",
+  "description": "PostToolUse hook that applies rule-based filtering to Bash, grep, find, ls, git, Read, and MCP tool output before it reaches the agent.",
   "version": "0.2.1",
   "author": {
     "name": "jmeiracorbal"

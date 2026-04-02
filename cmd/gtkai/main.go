@@ -1,5 +1,5 @@
-// gtk-ai — Go Token Killer
-// Claude Code token compression proxy. Modular, zero dependencies.
+// gtk-ai — PostToolUse hook for Claude Code.
+// Applies rule-based output filtering to Bash, git, grep, find, ls, Read, and MCP tools.
 // Binary: gtkai
 package main
 
@@ -22,17 +22,17 @@ import (
 const version = "0.2.1"
 
 func usage() {
-	fmt.Fprintf(os.Stderr, `gtkai %s — Go Token Killer
+	fmt.Fprintf(os.Stderr, `gtkai %s
 
 Usage:
   gtkai setup [--dry-run]    Install gtk-ai into Claude Code (hook + CLAUDE.md)
-  gtkai hook-post            PostToolUse hook — reads stdin, compresses Bash + MCP + Read output
+  gtkai hook-post            PostToolUse hook — reads stdin, writes filtered output
   gtkai mcp-scan             List tools from all MCP servers, suggest passthrough prefixes
   gtkai gain                 Show token savings analytics
   gtkai version              Print version
 
 Environment:
-  GTK_MCP_PASSTHROUGH_PATTERNS  Comma-separated MCP tool patterns to skip compression
+  GTK_MCP_PASSTHROUGH_PATTERNS  Comma-separated MCP tool patterns to skip filtering
                                  Example: hc_*,my_tool
 `, version)
 }

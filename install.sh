@@ -28,8 +28,7 @@ header()  { printf "\n${BOLD}%s${RESET}\n" "$1"; }
 
 printf "${BOLD}"
 cat <<'EOF'
-   gtk-ai — Go Token Killer
-   Claude Code token compression proxy
+   gtk-ai — rule-based output filtering for Claude Code
 EOF
 printf "${RESET}\n"
 

@@ -1,5 +1,5 @@
 {
-  "description": "gtk-ai PostToolUse hook: compress Bash, MCP and Read output before Claude reads it",
+  "description": "gtk-ai PostToolUse hook: applies rule-based filtering to Bash, MCP, and Read output before it reaches the agent",
   "hooks": {
     "PostToolUse": [
       {

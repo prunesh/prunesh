@@ -6,14 +6,14 @@
 ![Claude Code](https://img.shields.io/badge/Claude%20Code-hook%20compatible-blueviolet?style=flat)
 ![Build](https://img.shields.io/badge/build-passing-brightgreen?style=flat)
 
-gtkai is a `PostToolUse` hook for Claude Code. It applies rule-based filtering to Bash, git, grep, find, ls, Read, and MCP tool output before it reaches the agent — truncation, grouping by extension, condensed formatting, and comment stripping depending on the command.
+gtkai is a `PostToolUse` hook for Claude Code. It applies rule-based filtering to Bash, git, grep, find, ls, Read, and MCP tool output before it reaches the agent: truncation, grouping by extension, condensed formatting, and comment stripping depending on the command.
 
 ```
 Claude → Bash("find . -name '*.rs'")
               ↓ executes
          84 results, full paths (raw output)
               ↓ PostToolUse → gtkai hook-post
-         📁 84 results / ext: .rs(84) / ...10 paths shown
+         84 results / ext: .rs(84) / ...10 paths shown
               ↓
          Claude receives filtered output (shorter, some detail dropped)
 ```
@@ -38,15 +38,15 @@ Savings grow with output size. Small outputs (a few lines) may not be reduced.
 
 ### 1. Install
 
-**Option A: One-line installer (recommended)**
+**Option A: one-line installer (recommended)**
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/jmeiracorbal/gtk-ai/main/install.sh | sh
 ```
 
-Downloads the binary and runs `gtkai setup`, which registers the marketplace, installs the plugin, and injects the context doc into your global CLAUDE.md.
+Downloads the binary to `~/.local/bin`, adds it to PATH, and runs `gtkai setup`. Setup registers the Claude plugin — hook registration is handled by Claude's plugin system, not by patching `settings.json` directly — and injects the context doc into your global `~/.claude/CLAUDE.md`.
 
-**Option B: Manual binary + setup**
+**Option B: manual binary + setup**
 
 Download the binary for your platform from [GitHub Releases](https://github.com/jmeiracorbal/gtk-ai/releases), place it in `~/.local/bin/`, then run:
 
@@ -54,7 +54,7 @@ Download the binary for your platform from [GitHub Releases](https://github.com/
 gtkai setup
 ```
 
-**Option C: Manual install** (requires Go 1.22+):
+**Option C: build from source** (requires Go 1.22+)
 
 ```bash
 git clone https://github.com/jmeiracorbal/gtk-ai
@@ -62,20 +62,20 @@ cd gtk-ai
 go build -o ~/.local/bin/gtkai ./cmd/gtkai/
 ```
 
-Verify:
+Verify the binary works:
 
 ```bash
 gtkai version
 # gtkai 0.2.1
 ```
 
-After installing, run:
+Then run setup:
 
 ```bash
 gtkai setup
 ```
 
-This registers the marketplace, installs the plugin, and injects the context doc into your global CLAUDE.md. Restart Claude Code when done.
+Setup registers the Claude plugin and injects the context doc into your global `~/.claude/CLAUDE.md`. Restart Claude Code when done.
 
 ## Modules
 
@@ -122,7 +122,7 @@ No other changes needed.
 
 ## MCP passthrough
 
-By default, gtkai truncates all `mcp__*` tool responses above 3,000 chars. To exempt specific tools, set `GTK_MCP_PASSTHROUGH_PATTERNS` in your shell configuration file (`.zshrc`, `.bashrc`, `.profile`, or whichever your shell uses):
+By default, gtkai truncates all `mcp__*` tool responses above 3,000 chars. To exempt specific tools, set `GTK_MCP_PASSTHROUGH_PATTERNS` in your shell config:
 
 ```sh
 export GTK_MCP_PASSTHROUGH_PATTERNS="my_tool_*,other_tool"
