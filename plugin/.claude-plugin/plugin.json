@@ -7,6 +7,5 @@
   },
   "homepage": "https://github.com/jmeiracorbal/gtk-ai",
   "repository": "https://github.com/jmeiracorbal/gtk-ai",
-  "license": "Apache-2.0",
-  "hooks": "./hooks/hooks.json"
+  "license": "Apache-2.0"
 }
