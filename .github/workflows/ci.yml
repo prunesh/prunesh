@@ -25,3 +25,17 @@ jobs:
 
       - name: Vet
         run: go vet ./...
+
+      - name: Check plugin manifest consistency
+        run: |
+          for field in name version author license repository homepage; do
+            root=$(jq -r ".${field} // .${field}.name // empty" .claude-plugin/plugin.json 2>/dev/null)
+            plugin=$(jq -r ".${field} // .${field}.name // empty" plugin/.claude-plugin/plugin.json 2>/dev/null)
+            if [ "$root" != "$plugin" ]; then
+              echo "manifest drift: field '${field}' differs"
+              echo "  .claude-plugin/plugin.json:        ${root}"
+              echo "  plugin/.claude-plugin/plugin.json: ${plugin}"
+              exit 1
+            fi
+          done
+          echo "plugin manifests are consistent"
