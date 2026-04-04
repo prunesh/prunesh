@@ -343,10 +343,10 @@ rm -rf "$TMP_DIR"
 # ── Done ──────────────────────────────────────────────────────────────────────
 
 if [ -n "$CLAUDE_ONLY" ]; then
-  printf '\n%s\n\n' "${BOLD}${GREEN}Claude configuration completed.${RESET}"
+  printf "\n${BOLD}${GREEN}%s${RESET}\n\n" "Claude configuration completed."
 else
-  printf '\n%s\n\n' "${BOLD}${GREEN}gtk-ai installed.${RESET}"
+  printf "\n${BOLD}${GREEN}%s${RESET}\n\n" "gtk-ai installed."
 fi
-printf 'To activate the Claude plugin, run:\n\n'
-printf '  %s\n\n' "${BOLD}claude plugin install -s user gtk-ai@gtk-ai${RESET}"
-printf 'Then restart Claude Code.\n\n'
+printf "To activate the Claude plugin, run:\n\n"
+printf "  ${BOLD}%s${RESET}\n\n" "claude plugin install -s user gtk-ai@gtk-ai"
+printf "Then restart Claude Code.\n\n"
