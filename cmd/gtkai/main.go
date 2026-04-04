@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/jmeiracorbal/gtk-ai/internal/hook"
-	"github.com/jmeiracorbal/gtk-ai/internal/setup"
 	"github.com/jmeiracorbal/gtk-ai/modules/gain"
 	"github.com/jmeiracorbal/gtk-ai/modules/mcpscan"
 
@@ -25,7 +24,6 @@ func usage() {
 	fmt.Fprintf(os.Stderr, `gtkai %s
 
 Usage:
-  gtkai setup [--dry-run]    Install gtk-ai into Claude Code (hook + CLAUDE.md)
   gtkai hook-post            PostToolUse hook — reads stdin, writes filtered output
   gtkai mcp-scan             List tools from all MCP servers, suggest passthrough prefixes
   gtkai gain                 Show token savings analytics
@@ -46,13 +44,6 @@ func main() {
 	switch os.Args[1] {
 	case "version", "--version", "-v":
 		fmt.Printf("gtkai %s\n", version)
-
-	case "setup":
-		dryRun := len(os.Args) > 2 && os.Args[2] == "--dry-run"
-		if err := setup.Install(dryRun); err != nil {
-			fmt.Fprintf(os.Stderr, "gtkai setup: %v\n", err)
-			os.Exit(1)
-		}
 
 	case "hook-post":
 		modified, err := hook.Run(os.Stdin, os.Stdout)

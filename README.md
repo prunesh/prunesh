@@ -46,28 +46,19 @@ gtk-ai requires both parts:
 1. the `gtkai` Go binary
 2. the Claude plugin that registers the hook and calls the binary
 
-### Option A: manual binary + setup
-
-Download the binary for your platform from [GitHub Releases](https://github.com/jmeiracorbal/gtk-ai/releases), place it in `~/.local/bin/`, then run:
+### Option A: install script
 
 ```bash
-gtkai version
-# gtkai 0.2.1
+curl -sSL https://raw.githubusercontent.com/jmeiracorbal/gtk-ai/main/install.sh | sh
 ```
 
-Then run:
+The script installs the binary, registers the marketplace, and prepares the Claude Code integration. When it finishes, run:
 
 ```bash
-gtkai setup
+claude plugin install -s user gtk-ai@gtk-ai
 ```
 
-`gtkai setup` configures the Claude side of the integration:
-
-- registers the marketplace
-- installs the Claude plugin
-- injects the context doc into the global `~/.claude/CLAUDE.md`
-
-The integration is not complete with only the binary. It requires both the binary and the plugin.
+Then restart Claude Code.
 
 ### Option B: build from source
 
@@ -79,20 +70,19 @@ cd gtk-ai
 go build -o ~/.local/bin/gtkai ./cmd/gtkai/
 ```
 
-Verify the binary works:
+Then configure the Claude Code side without reinstalling the binary:
 
 ```bash
-gtkai version
-# gtkai 0.2.1
+GTKAI_CLAUDE_ONLY=1 sh install.sh
 ```
 
-Then install the Claude side:
+When it finishes, install the plugin:
 
 ```bash
-gtkai setup
+claude plugin install -s user gtk-ai@gtk-ai
 ```
 
-Setup installs the plugin and injects the context doc into your global `~/.claude/CLAUDE.md`. Restart Claude Code when done.
+Restart Claude Code when done.
 
 ## Modules
 
@@ -155,9 +145,9 @@ To identify which tools to exempt, check the tool names returned by your MCP ser
 
 ```text
 gtkai hook-post     PostToolUse handler — reads stdin JSON, writes filtered output
+gtkai mcp-scan      List MCP server tools, suggest passthrough prefixes
 gtkai gain          Token savings analytics
 gtkai version       Print version
-gtkai setup         Install and configure the Claude plugin integration
 ```
 
 ## Architecture
