@@ -247,7 +247,7 @@ func mcpHandshake(w io.Writer, r io.Reader) ([]string, error) {
 		Params: map[string]interface{}{
 			"protocolVersion": "2024-11-05",
 			"capabilities":    map[string]interface{}{},
-			"clientInfo":      map[string]interface{}{"name": "gtkai", "version": "0.2.1"},
+			"clientInfo":      map[string]interface{}{"name": "gtkai", "version": "0.3.0"},
 		},
 	}); err != nil {
 		return nil, err
