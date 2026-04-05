@@ -16,6 +16,7 @@ import (
 	_ "github.com/jmeiracorbal/gtk-ai/modules/git"
 	_ "github.com/jmeiracorbal/gtk-ai/modules/grep"
 	_ "github.com/jmeiracorbal/gtk-ai/modules/ls"
+	_ "github.com/jmeiracorbal/gtk-ai/modules/rg"
 )
 
 const version = "0.3.2"

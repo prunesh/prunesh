@@ -86,7 +86,11 @@ func (m *Module) FilterOutput(output string) string {
 		sb.WriteString(fmt.Sprintf("... [gtkai: %d total matches, output truncated]\n", totalMatches))
 	}
 
-	return sb.String()
+	result := sb.String()
+	if len(result) >= len(output) {
+		return output
+	}
+	return result
 }
 
 func (m *Module) TokensBefore(output string) int {
@@ -103,6 +107,21 @@ type fileMatches struct {
 	matches map[string][]string
 }
 
+// isMatchLine reports whether a line is a rg match line in heading format.
+// Match lines start with one or more digits followed immediately by ':' or '-'
+// (e.g. "15:content" or "15-context"). File names that start with digits
+// (e.g. "123.go") do not match this pattern.
+func isMatchLine(l string) bool {
+	i := 0
+	for i < len(l) && l[i] >= '0' && l[i] <= '9' {
+		i++
+	}
+	if i == 0 || i >= len(l) {
+		return false
+	}
+	return l[i] == ':' || l[i] == '-'
+}
+
 // parseRgOutput handles both rg output formats:
 //
 // Heading format (rg default, with -n):
@@ -114,15 +133,14 @@ type fileMatches struct {
 //
 //	src/file.go:15:    return fmt.Errorf("error")
 //
-// Detection: if any non-empty line starts with a digit, the output is in heading
-// format (those are match lines like "15:content"). Otherwise flat.
+// Detection: if any non-empty line matches the match-line pattern (digits followed
+// by ':' or '-'), the output is in heading format. Otherwise flat.
 func parseRgOutput(lines []string) fileMatches {
 	result := fileMatches{matches: map[string][]string{}}
 
-	// Detect heading format: match lines start with a digit (line number).
 	headingFormat := false
 	for _, l := range lines {
-		if len(l) > 0 && l[0] >= '0' && l[0] <= '9' {
+		if isMatchLine(l) {
 			headingFormat = true
 			break
 		}
@@ -131,13 +149,11 @@ func parseRgOutput(lines []string) fileMatches {
 	if headingFormat {
 		currentFile := ""
 		for _, l := range lines {
-			if len(l) > 0 && l[0] >= '0' && l[0] <= '9' {
-				// match line
+			if isMatchLine(l) {
 				if currentFile != "" {
 					result.matches[currentFile] = append(result.matches[currentFile], l)
 				}
 			} else {
-				// heading line
 				currentFile = l
 				if _, seen := result.matches[currentFile]; !seen {
 					result.order = append(result.order, currentFile)
