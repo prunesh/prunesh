@@ -14,6 +14,7 @@ import (
 	_ "github.com/jmeiracorbal/gtk-ai/modules/git"
 	_ "github.com/jmeiracorbal/gtk-ai/modules/grep"
 	_ "github.com/jmeiracorbal/gtk-ai/modules/ls"
+	_ "github.com/jmeiracorbal/gtk-ai/modules/rg"
 )
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -426,5 +427,72 @@ func TestMCPPassthrough(t *testing.T) {
 	modified, _ := runHook(t, mcpPayload("mcp__myserver__query_data_large", raw))
 	if modified {
 		t.Error("tool matching passthrough pattern should not be compressed")
+	}
+}
+
+// ── rg ────────────────────────────────────────────────────────────────────────
+
+func TestRgCompressionHeading(t *testing.T) {
+	// rg default output: heading format (bare filename + match lines)
+	var sb strings.Builder
+	for i := 0; i < 20; i++ {
+		fmt.Fprintf(&sb, "src/module_%02d/handler.go\n", i)
+		for j := 0; j < 15; j++ {
+			fmt.Fprintf(&sb, "%d:    return fmt.Errorf(\"token error %d-%d\")\n", j+1, i, j)
+		}
+		sb.WriteString("\n")
+	}
+	raw := sb.String()
+
+	modified, out := runHook(t, bashPayload("rg 'Errorf' src/", raw))
+	if !modified {
+		t.Fatal("expected hook to modify rg output")
+	}
+
+	compressed := extractBashOutput(t, out)
+	reportGain(t, "rg heading (20 files × 15 matches)", raw, compressed)
+
+	if len(compressed) >= len(raw) {
+		t.Errorf("expected compressed output to be shorter (%d >= %d)", len(compressed), len(raw))
+	}
+	if !strings.Contains(compressed, "300") {
+		t.Error("expected total match count in compressed output")
+	}
+	if !strings.Contains(compressed, "20") {
+		t.Error("expected file count in compressed output")
+	}
+}
+
+func TestRgFlatFormat(t *testing.T) {
+	// rg --no-heading output: file:line:content (same as grep -n)
+	var sb strings.Builder
+	for i := 0; i < 15; i++ {
+		for j := 0; j < 12; j++ {
+			fmt.Fprintf(&sb, "src/file_%02d.go:%d:    return fmt.Errorf(\"error %d\")\n", i, j+1, j)
+		}
+	}
+	raw := sb.String()
+
+	modified, out := runHook(t, bashPayload("rg --no-heading 'Errorf' src/", raw))
+	if !modified {
+		t.Fatal("expected hook to modify rg flat output")
+	}
+
+	compressed := extractBashOutput(t, out)
+	reportGain(t, "rg flat (15 files × 12 matches)", raw, compressed)
+
+	if len(compressed) >= len(raw) {
+		t.Errorf("expected compressed output to be shorter (%d >= %d)", len(compressed), len(raw))
+	}
+	if !strings.Contains(compressed, "180") {
+		t.Error("expected total match count in compressed output")
+	}
+}
+
+func TestRgSmallOutput(t *testing.T) {
+	raw := "src/main.go\n5:    return fmt.Errorf(\"error\")\n\n"
+	modified, _ := runHook(t, bashPayload("rg 'Errorf' src/", raw))
+	if modified {
+		t.Error("small rg output should not be modified")
 	}
 }
