@@ -1,7 +1,7 @@
 {
   "name": "gtk-ai",
   "description": "PostToolUse hook that applies rule-based filtering to Bash, grep, find, ls, git, Read, and MCP tool output before it reaches the agent.",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "author": {
     "name": "jmeiracorbal"
   },

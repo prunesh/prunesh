@@ -20,7 +20,7 @@ import (
 
 func bashPayload(command, output string) string {
 	toolInput, _ := json.Marshal(map[string]string{"command": command})
-	toolResp, _ := json.Marshal(map[string]interface{}{"output": output, "interrupted": false})
+	toolResp, _ := json.Marshal(map[string]interface{}{"stdout": output, "stderr": "", "interrupted": false})
 	p, _ := json.Marshal(map[string]json.RawMessage{
 		"tool_name":     json.RawMessage(`"Bash"`),
 		"tool_input":    toolInput,

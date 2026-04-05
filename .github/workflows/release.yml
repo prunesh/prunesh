@@ -10,9 +10,49 @@ permissions:
   packages: write   # push to GHCR
 
 jobs:
+  # ── Verify tag matches code version ─────────────────────────────────────────
+  version-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify tag matches code version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          go_ver=$(grep 'const version = ' cmd/gtkai/main.go | sed 's/.*"\([0-9.]*\)".*/\1/')
+          if [ -z "$go_ver" ]; then
+            echo "could not extract version from cmd/gtkai/main.go"
+            exit 1
+          fi
+          if [ "$tag" != "$go_ver" ]; then
+            echo "tag '$tag' does not match cmd/gtkai/main.go version '$go_ver'"
+            exit 1
+          fi
+          echo "tag matches code version: $go_ver"
+
+      - name: Verify version consistency across files
+        run: |
+          go_ver=$(grep 'const version = ' cmd/gtkai/main.go | sed 's/.*"\([0-9.]*\)".*/\1/')
+          failed=0
+          check() {
+            local label=$1 val=$2
+            if [ "$val" != "$go_ver" ]; then
+              echo "version drift: $label = '$val', expected '$go_ver'"
+              failed=1
+            else
+              echo "ok: $label = $val"
+            fi
+          }
+          check ".claude-plugin/marketplace.json"   "$(jq -r '.plugins[0].version' .claude-plugin/marketplace.json)"
+          check ".claude-plugin/plugin.json"        "$(jq -r '.version' .claude-plugin/plugin.json)"
+          check "plugin/.claude-plugin/plugin.json" "$(jq -r '.version' plugin/.claude-plugin/plugin.json)"
+          check "modules/mcpscan/mcpscan.go"        "$(sed -n 's/.*"version": "\([0-9.]*\)".*/\1/p' modules/mcpscan/mcpscan.go | head -1)"
+          exit $failed
+
   # ── Build binaries + create GitHub Release ──────────────────────────────────
   release:
     runs-on: ubuntu-latest
+    needs: version-check
     steps:
       - uses: actions/checkout@v4
 
@@ -52,7 +92,7 @@ jobs:
   # ── Build Docker image + push to GHCR ───────────────────────────────────────
   docker:
     runs-on: ubuntu-latest
-    needs: release   # only push image if release succeeded
+    needs: [version-check, release]
     steps:
       - uses: actions/checkout@v4
 

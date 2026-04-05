@@ -17,7 +17,7 @@ import (
 // ── Input structures ──────────────────────────────────────────────────────────
 
 type bashResponse struct {
-	Output      string `json:"output"`
+	Stdout      string `json:"stdout"`
 	Interrupted bool   `json:"interrupted"`
 }
 
@@ -123,12 +123,12 @@ func handleBash(input hookInput, w io.Writer) (bool, error) {
 	if err := json.Unmarshal(input.ToolResp, &resp); err != nil {
 		return false, nil
 	}
-	if resp.Output == "" {
+	if resp.Stdout == "" {
 		return false, nil
 	}
 
 	// Detect which module applies
-	filtered, changed := filterBashOutput(bi.Command, resp.Output)
+	filtered, changed := filterBashOutput(bi.Command, resp.Stdout)
 	if !changed {
 		return false, nil
 	}
