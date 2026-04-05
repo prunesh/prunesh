@@ -26,9 +26,33 @@ jobs:
       - name: Vet
         run: go vet ./...
 
-      - name: Check plugin manifest consistency
+      - name: Check version consistency
         run: |
-          for field in name version author license repository homepage; do
+          go_ver=$(grep 'const version = ' cmd/gtkai/main.go | sed 's/.*"\([0-9.]*\)".*/\1/')
+          if [ -z "$go_ver" ]; then
+            echo "could not extract version from cmd/gtkai/main.go"
+            exit 1
+          fi
+          echo "canonical version: $go_ver"
+          failed=0
+          check() {
+            local label=$1 val=$2
+            if [ "$val" != "$go_ver" ]; then
+              echo "version drift: $label = '$val', expected '$go_ver'"
+              failed=1
+            else
+              echo "ok: $label = $val"
+            fi
+          }
+          check ".claude-plugin/marketplace.json"   "$(jq -r '.plugins[0].version' .claude-plugin/marketplace.json)"
+          check ".claude-plugin/plugin.json"        "$(jq -r '.version' .claude-plugin/plugin.json)"
+          check "plugin/.claude-plugin/plugin.json" "$(jq -r '.version' plugin/.claude-plugin/plugin.json)"
+          check "modules/mcpscan/mcpscan.go"        "$(sed -n 's/.*"version": "\([0-9.]*\)".*/\1/p' modules/mcpscan/mcpscan.go | head -1)"
+          exit $failed
+
+      - name: Check plugin manifest field consistency
+        run: |
+          for field in name author license repository homepage; do
             root=$(jq -r ".${field} // .${field}.name // empty" .claude-plugin/plugin.json 2>/dev/null)
             plugin=$(jq -r ".${field} // .${field}.name // empty" plugin/.claude-plugin/plugin.json 2>/dev/null)
             if [ "$root" != "$plugin" ]; then
@@ -38,4 +62,14 @@ jobs:
               exit 1
             fi
           done
-          echo "plugin manifests are consistent"
+          echo "plugin manifest fields are consistent"
+
+      - name: Check hook script is executable
+        run: |
+          mode=$(git ls-files -s plugin/scripts/gtkai-post-tool-use.sh | awk '{print $1}')
+          if [ "$mode" != "100755" ]; then
+            echo "plugin/scripts/gtkai-post-tool-use.sh is not executable in git (mode: $mode)"
+            echo "fix: git update-index --chmod=+x plugin/scripts/gtkai-post-tool-use.sh"
+            exit 1
+          fi
+          echo "hook script executable bit: ok"
