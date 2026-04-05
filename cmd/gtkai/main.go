@@ -19,7 +19,7 @@ import (
 	_ "github.com/jmeiracorbal/gtk-ai/modules/rg"
 )
 
-const version = "0.3.2"
+const version = "0.3.3"
 
 func usage() {
 	fmt.Fprintf(os.Stderr, `gtkai %s
