@@ -2,8 +2,10 @@
 package pluginregistry
 
 import (
+	"crypto/sha256"
 	"database/sql"
 	"embed"
+	"encoding/hex"
 	"fmt"
 	"io/fs"
 	"path/filepath"
@@ -21,8 +23,13 @@ var migrationsFS embed.FS
 
 var migrationFileRe = regexp.MustCompile(`^(\d{4})-[a-z0-9][a-z0-9-]*\.sql$`)
 
+// expectedColumns lists the columns the plugins table must have after all migrations.
+var expectedColumns = []string{"id", "module", "version", "argv0", "contract", "binary_path", "manifest_path", "installed_at"}
+
 const metaDDL = `CREATE TABLE IF NOT EXISTS schema_migrations (
     version    TEXT PRIMARY KEY,
+    checksum   TEXT NOT NULL DEFAULT '',
+    dirty      INTEGER NOT NULL DEFAULT 0,
     applied_at TEXT NOT NULL DEFAULT (datetime('now'))
 );`
 
@@ -176,8 +183,9 @@ func (d *DB) List() ([]Record, error) {
 // ── Migration runner ──────────────────────────────────────────────────────────
 
 type migrationFile struct {
-	version string
-	content string
+	version  string
+	content  string
+	checksum string
 }
 
 func applyMigrations(db *sql.DB) error {
@@ -189,40 +197,101 @@ func applyMigrations(db *sql.DB) error {
 		return err
 	}
 	for _, f := range files {
-		var count int
-		if err := db.QueryRow(`SELECT COUNT(*) FROM schema_migrations WHERE version = ?`, f.version).Scan(&count); err != nil {
+		var storedChecksum string
+		var dirty int
+		err := db.QueryRow(`SELECT checksum, dirty FROM schema_migrations WHERE version = ?`, f.version).
+			Scan(&storedChecksum, &dirty)
+		if err != nil && err != sql.ErrNoRows {
 			return fmt.Errorf("check migration %s: %w", f.version, err)
 		}
-		if count > 0 {
+		if err == nil {
+			// Already recorded — validate checksum and dirty flag.
+			if dirty != 0 {
+				// Crash mid-migration: re-apply since all SQL is idempotent.
+				if err := runMigration(db, f); err != nil {
+					return fmt.Errorf("re-apply dirty migration %s: %w", f.version, err)
+				}
+				continue
+			}
+			if storedChecksum != f.checksum {
+				return fmt.Errorf("migration %s checksum changed (db=%s want=%s): do not edit applied migrations", f.version, storedChecksum, f.checksum)
+			}
 			continue
 		}
-		shouldRun, err := guardPasses(db, f.content)
-		if err != nil {
-			return fmt.Errorf("migration %s guard: %w", f.version, err)
-		}
-		if shouldRun {
-			tx, err := db.Begin()
-			if err != nil {
-				return fmt.Errorf("begin migration %s: %w", f.version, err)
-			}
-			if _, err := tx.Exec(f.content); err != nil {
-				_ = tx.Rollback()
-				return fmt.Errorf("apply migration %s: %w", f.version, err)
-			}
-			if _, err := tx.Exec(`INSERT INTO schema_migrations (version) VALUES (?)`, f.version); err != nil {
-				_ = tx.Rollback()
-				return fmt.Errorf("record migration %s: %w", f.version, err)
-			}
-			if err := tx.Commit(); err != nil {
-				return fmt.Errorf("commit migration %s: %w", f.version, err)
-			}
-		} else {
-			if _, err := db.Exec(`INSERT INTO schema_migrations (version) VALUES (?)`, f.version); err != nil {
-				return fmt.Errorf("record skipped migration %s: %w", f.version, err)
-			}
+		// Not yet applied.
+		if err := runMigration(db, f); err != nil {
+			return err
 		}
 	}
+	return validateSchema(db)
+}
+
+func runMigration(db *sql.DB, f migrationFile) error {
+	// Mark dirty before starting so a crash is detectable on next open.
+	if _, err := db.Exec(
+		`INSERT INTO schema_migrations (version, checksum, dirty) VALUES (?, ?, 1)
+		 ON CONFLICT(version) DO UPDATE SET dirty=1`,
+		f.version, f.checksum,
+	); err != nil {
+		return fmt.Errorf("mark dirty %s: %w", f.version, err)
+	}
+	shouldRun, err := guardPasses(db, f.content)
+	if err != nil {
+		return fmt.Errorf("migration %s guard: %w", f.version, err)
+	}
+	if shouldRun {
+		tx, err := db.Begin()
+		if err != nil {
+			return fmt.Errorf("begin migration %s: %w", f.version, err)
+		}
+		if _, err := tx.Exec(f.content); err != nil {
+			_ = tx.Rollback()
+			return fmt.Errorf("apply migration %s: %w", f.version, err)
+		}
+		if err := tx.Commit(); err != nil {
+			return fmt.Errorf("commit migration %s: %w", f.version, err)
+		}
+	}
+	// Clear dirty flag.
+	if _, err := db.Exec(
+		`UPDATE schema_migrations SET dirty=0, applied_at=datetime('now') WHERE version=?`,
+		f.version,
+	); err != nil {
+		return fmt.Errorf("clear dirty %s: %w", f.version, err)
+	}
 	return nil
+}
+
+// validateSchema confirms the plugins table exists with all expected columns.
+func validateSchema(db *sql.DB) error {
+	var count int
+	_ = db.QueryRow(`SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='plugins'`).Scan(&count)
+	if count == 0 {
+		return fmt.Errorf("schema invalid: plugins table missing")
+	}
+	rows, err := db.Query(`PRAGMA table_info(plugins)`)
+	if err != nil {
+		return fmt.Errorf("pragma table_info: %w", err)
+	}
+	defer rows.Close()
+	cols := map[string]bool{}
+	for rows.Next() {
+		var cid int
+		var name, typ string
+		var notNull int
+		var dflt any
+		var pk int
+		if err := rows.Scan(&cid, &name, &typ, &notNull, &dflt, &pk); err != nil {
+			return err
+		}
+		cols[name] = true
+	}
+	for _, col := range expectedColumns {
+		if !cols[col] {
+			return fmt.Errorf("schema invalid: plugins.%s missing", col)
+		}
+	}
+	return rows.Err()
 }
 
 func loadMigrationFiles() ([]migrationFile, error) {
@@ -242,7 +311,12 @@ func loadMigrationFiles() ([]migrationFile, error) {
 		if err != nil {
 			return nil, fmt.Errorf("read migration %s: %w", entry.Name(), err)
 		}
-		files = append(files, migrationFile{version: entry.Name()[:4], content: string(content)})
+		sum := sha256.Sum256(content)
+		files = append(files, migrationFile{
+			version:  entry.Name()[:4],
+			content:  string(content),
+			checksum: "sha256:" + hex.EncodeToString(sum[:]),
+		})
 	}
 	sort.Slice(files, func(i, j int) bool { return files[i].version < files[j].version })
 	return files, nil
