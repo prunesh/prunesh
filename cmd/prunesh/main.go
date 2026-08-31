@@ -46,6 +46,7 @@ Usage:
   prunesh plugin install <mod@ver> [--replace]  Install an external plugin (go dependency)
   prunesh plugin uninstall <id>      Remove an installed plugin by full id
   prunesh plugin list                List installed plugins (active marked)
+  prunesh update [--check] [--yes]   Check for updates; prompt to install if one is available
   prunesh version                    Print version
 
 Agents:
@@ -53,7 +54,8 @@ Agents:
 
 Environment:
   PRUNESH_MCP_PASSTHROUGH_PATTERNS  Comma-separated MCP tool patterns to skip filtering
-                                 Example: hc_*,my_tool
+                                    Example: hc_*,my_tool
+  PRUNESH_NO_UPDATE_CHECK           Set to any value to disable automatic update notices
 `, version)
 }
 
@@ -62,6 +64,8 @@ func main() {
 		usage()
 		os.Exit(1)
 	}
+
+	maybeWarnUpdate(os.Args[1:])
 
 	switch os.Args[1] {
 	case "version", "--version", "-v":
@@ -132,6 +136,9 @@ func main() {
 			fmt.Fprintf(os.Stderr, "prunesh: %v\n", err)
 			os.Exit(1)
 		}
+
+	case "update":
+		runUpdate()
 
 	case "plugin":
 		runPlugin(os.Args[2:])
