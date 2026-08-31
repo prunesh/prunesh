@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/registry"
+	"github.com/prunesh/prunesh/internal/registry"
 )
 
 func TestRewriteTestInjectsJSON(t *testing.T) {

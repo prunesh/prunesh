@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/pluginsubprocess"
+	"github.com/prunesh/prunesh/internal/pluginsubprocess"
 )
 
 // compliantSrc is a minimal subprocess/v1 binary: handles both rewrite and filter_output.

@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/plugininstall"
-	"github.com/jmeiracorbal/gtk-ai/internal/pluginregistry"
+	"github.com/prunesh/prunesh/internal/plugininstall"
+	"github.com/prunesh/prunesh/internal/pluginregistry"
 )
 
 func runPlugin(args []string) {
@@ -22,14 +22,14 @@ func runPlugin(args []string) {
 	case "list":
 		runPluginList()
 	default:
-		fmt.Fprintf(os.Stderr, "gtkai plugin: unknown subcommand %q\n", args[0])
+		fmt.Fprintf(os.Stderr, "prunesh plugin: unknown subcommand %q\n", args[0])
 		printPluginUsage()
 		os.Exit(1)
 	}
 }
 
 func printPluginUsage() {
-	fmt.Fprintln(os.Stderr, "usage: gtkai plugin install <module@version> [--replace] | uninstall <id> | list")
+	fmt.Fprintln(os.Stderr, "usage: prunesh plugin install <module@version> [--replace] | uninstall <id> | list")
 }
 
 func runPluginInstall(args []string) {
@@ -40,23 +40,23 @@ func runPluginInstall(args []string) {
 		case arg == "--replace":
 			replace = true
 		case strings.HasPrefix(arg, "-"):
-			fmt.Fprintf(os.Stderr, "gtkai plugin install: unknown flag %q\n", arg)
+			fmt.Fprintf(os.Stderr, "prunesh plugin install: unknown flag %q\n", arg)
 			os.Exit(1)
 		default:
 			if ref != "" {
-				fmt.Fprintln(os.Stderr, "usage: gtkai plugin install <module@version> [--replace]")
+				fmt.Fprintln(os.Stderr, "usage: prunesh plugin install <module@version> [--replace]")
 				os.Exit(1)
 			}
 			ref = arg
 		}
 	}
 	if ref == "" {
-		fmt.Fprintln(os.Stderr, "usage: gtkai plugin install <module@version> [--replace]")
+		fmt.Fprintln(os.Stderr, "usage: prunesh plugin install <module@version> [--replace]")
 		os.Exit(1)
 	}
 	module, pluginVer, err := plugininstall.ParseRef(ref)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "gtkai plugin install: %v\n", err)
+		fmt.Fprintf(os.Stderr, "prunesh plugin install: %v\n", err)
 		os.Exit(1)
 	}
 	rec, err := plugininstall.Install(plugininstall.Options{
@@ -67,7 +67,7 @@ func runPluginInstall(args []string) {
 		Replace:     replace,
 	})
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "gtkai plugin install: %v\n", err)
+		fmt.Fprintf(os.Stderr, "prunesh plugin install: %v\n", err)
 		os.Exit(1)
 	}
 	fmt.Printf("installed %s@%s -> %s (%s)\n", rec.Module, rec.Version, rec.ID, rec.BinaryPath)
@@ -76,12 +76,12 @@ func runPluginInstall(args []string) {
 
 func runPluginUninstall(args []string) {
 	if len(args) != 1 || args[0] == "" {
-		fmt.Fprintln(os.Stderr, "usage: gtkai plugin uninstall <id>")
+		fmt.Fprintln(os.Stderr, "usage: prunesh plugin uninstall <id>")
 		os.Exit(1)
 	}
 	rec, err := plugininstall.Uninstall(args[0])
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "gtkai plugin uninstall: %v\n", err)
+		fmt.Fprintf(os.Stderr, "prunesh plugin uninstall: %v\n", err)
 		os.Exit(1)
 	}
 	fmt.Printf("uninstalled %s (argv0=%s)\n", rec.ID, rec.Argv0)
@@ -90,13 +90,13 @@ func runPluginUninstall(args []string) {
 func runPluginList() {
 	db, err := pluginregistry.Open()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "gtkai plugin list: %v\n", err)
+		fmt.Fprintf(os.Stderr, "prunesh plugin list: %v\n", err)
 		os.Exit(1)
 	}
 	defer db.Close()
 	recs, err := db.List()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "gtkai plugin list: %v\n", err)
+		fmt.Fprintf(os.Stderr, "prunesh plugin list: %v\n", err)
 		os.Exit(1)
 	}
 	if len(recs) == 0 {
@@ -105,7 +105,7 @@ func runPluginList() {
 	}
 	activeByArgv0, err := activePluginIDs(db, recs)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "gtkai plugin list: %v\n", err)
+		fmt.Fprintf(os.Stderr, "prunesh plugin list: %v\n", err)
 		os.Exit(1)
 	}
 	for _, rec := range recs {
@@ -137,8 +137,8 @@ func activePluginIDs(db *pluginregistry.DB, recs []pluginregistry.Record) (map[s
 }
 
 func releaseRepo() string {
-	if v := os.Getenv("GTKAI_RELEASE_REPO"); v != "" {
+	if v := os.Getenv("PRUNESH_RELEASE_REPO"); v != "" {
 		return v
 	}
-	return "gtk-ai/gtk-ai"
+	return "prunesh/prunesh"
 }

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/registry"
+	"github.com/prunesh/prunesh/internal/registry"
 )
 
 func TestRewriteTestInjectsQuiet(t *testing.T) {

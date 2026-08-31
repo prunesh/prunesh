@@ -1,5 +1,5 @@
 // Package jsonmerge deep-merges a JSON patch into a config file.
-// Used by `gtkai json-merge` so the installer can patch hooks.json without jq.
+// Used by `prunesh json-merge` so the installer can patch hooks.json without jq.
 package jsonmerge
 
 import (
@@ -77,7 +77,7 @@ func MergeValue(filePath string, patch any) (changed bool, err error) {
 	if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
 		return false, fmt.Errorf("mkdir: %w", err)
 	}
-	tmp, err := os.CreateTemp(filepath.Dir(filePath), ".gtkai-jsonmerge-*")
+	tmp, err := os.CreateTemp(filepath.Dir(filePath), ".prunesh-jsonmerge-*")
 	if err != nil {
 		return false, fmt.Errorf("tempfile: %w", err)
 	}

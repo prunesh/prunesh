@@ -1,5 +1,5 @@
 // Package mcpscan queries registered MCP servers and lists their tools,
-// helping users decide which prefixes to add to GTK_MCP_PASSTHROUGH_PATTERNS.
+// helping users decide which prefixes to add to PRUNESH_MCP_PASSTHROUGH_PATTERNS.
 package mcpscan
 
 import (
@@ -64,7 +64,7 @@ type ServerResult struct {
 
 // Run queries all stdio MCP servers registered in ~/.claude/settings.json
 // and prints tool names grouped by prefix, compared against
-// GTK_MCP_PASSTHROUGH_PATTERNS.
+// PRUNESH_MCP_PASSTHROUGH_PATTERNS.
 func Run() error {
 	settingsPath := filepath.Join(os.Getenv("HOME"), ".claude", "settings.json")
 	data, err := os.ReadFile(settingsPath)
@@ -126,7 +126,7 @@ func Run() error {
 	missing := []string{}
 	for _, p := range prefixList {
 		if configured[p] {
-			fmt.Printf("  %-14s  ✓ in GTK_MCP_PASSTHROUGH_PATTERNS\n", p)
+			fmt.Printf("  %-14s  ✓ in PRUNESH_MCP_PASSTHROUGH_PATTERNS\n", p)
 		} else {
 			fmt.Printf("  %-14s  ✗ not configured\n", p)
 			missing = append(missing, p)
@@ -137,7 +137,7 @@ func Run() error {
 		existing := sortedKeys(configured)
 		all := append(existing, missing...)
 		fmt.Printf("\n  Add to your shell config:\n")
-		fmt.Printf("  export GTK_MCP_PASSTHROUGH_PATTERNS=%q\n", strings.Join(all, ","))
+		fmt.Printf("  export PRUNESH_MCP_PASSTHROUGH_PATTERNS=%q\n", strings.Join(all, ","))
 	}
 
 	return nil
@@ -158,10 +158,10 @@ func groupByPrefix(tools map[string]bool) map[string]bool {
 	return out
 }
 
-// passthroughSet returns the current GTK_MCP_PASSTHROUGH_PATTERNS as a set.
+// passthroughSet returns the current PRUNESH_MCP_PASSTHROUGH_PATTERNS as a set.
 func passthroughSet() map[string]bool {
 	out := map[string]bool{}
-	raw := os.Getenv("GTK_MCP_PASSTHROUGH_PATTERNS")
+	raw := os.Getenv("PRUNESH_MCP_PASSTHROUGH_PATTERNS")
 	for _, p := range strings.Split(raw, ",") {
 		if p = strings.TrimSpace(p); p != "" {
 			out[p] = true
@@ -247,7 +247,7 @@ func mcpHandshake(w io.Writer, r io.Reader) ([]string, error) {
 		Params: map[string]interface{}{
 			"protocolVersion": "2024-11-05",
 			"capabilities":    map[string]interface{}{},
-			"clientInfo":      map[string]interface{}{"name": "gtkai", "version": "0.12.0"},
+			"clientInfo":      map[string]interface{}{"name": "prunesh", "version": "0.12.0"},
 		},
 	}); err != nil {
 		return nil, err

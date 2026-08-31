@@ -38,7 +38,7 @@ func FilterContent(path, content string) (string, bool) {
 	if len(lines) > maxLines {
 		remaining := len(lines) - headLines
 		lines = append(lines[:headLines],
-			fmt.Sprintf("... [gtkai: %d lines not shown]", remaining))
+			fmt.Sprintf("... [prunesh: %d lines not shown]", remaining))
 		truncated = true
 	}
 

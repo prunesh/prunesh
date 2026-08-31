@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/hook"
+	"github.com/prunesh/prunesh/internal/hook"
 )
 
 func TestParseAgent(t *testing.T) {

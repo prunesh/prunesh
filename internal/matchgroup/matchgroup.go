@@ -70,7 +70,7 @@ func Format(output string) string {
 	}
 
 	if totalMatches > maxTotalMatches {
-		sb.WriteString(fmt.Sprintf("... [gtkai: %d total matches, output truncated]\n", totalMatches))
+		sb.WriteString(fmt.Sprintf("... [prunesh: %d total matches, output truncated]\n", totalMatches))
 	}
 
 	result := sb.String()

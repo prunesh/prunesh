@@ -1,5 +1,5 @@
 // Tests de integración end-to-end.
-// Compilan el binario gtkai en un directorio temporal y lo ejecutan contra
+// Compilan el binario prunesh en un directorio temporal y lo ejecutan contra
 // un repositorio git local simulado, verificando que la salida es compacta
 // y que el exit code se propaga correctamente.
 package main_test
@@ -14,17 +14,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/plugininstall"
-	"github.com/jmeiracorbal/gtk-ai/internal/pluginmanifest"
-	"github.com/jmeiracorbal/gtk-ai/internal/testhome"
+	"github.com/prunesh/prunesh/internal/plugininstall"
+	"github.com/prunesh/prunesh/internal/pluginmanifest"
+	"github.com/prunesh/prunesh/internal/testhome"
 )
 
-// buildBinary compila gtkai en dir y devuelve la ruta al ejecutable.
+// buildBinary compila prunesh en dir y devuelve la ruta al ejecutable.
 func buildBinary(t *testing.T) string {
 	t.Helper()
-	bin := filepath.Join(t.TempDir(), "gtkai")
+	bin := filepath.Join(t.TempDir(), "prunesh")
 	cmd := exec.Command("go", "build", "-o", bin, ".")
-	cmd.Dir = filepath.Join(moduleRoot(t), "cmd/gtkai")
+	cmd.Dir = filepath.Join(moduleRoot(t), "cmd/prunesh")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("build failed: %v\n%s", err, out)
@@ -82,7 +82,7 @@ func initRepo(t *testing.T, dir string) {
 	}
 }
 
-// run ejecuta gtkai con los args dados en workDir y devuelve stdout+stderr y el exit code.
+// run ejecuta prunesh con los args dados en workDir y devuelve stdout+stderr y el exit code.
 func run(t *testing.T, bin, workDir string, args ...string) (string, int) {
 	return runHome(t, bin, workDir, t.TempDir(), args...)
 }
@@ -227,13 +227,13 @@ func installTestDatePlugin(t *testing.T) string {
 	}
 
 	manifest := pluginmanifest.Manifest{
-		ID:       "gtk-ai/date",
+		ID:       "prunesh/date",
 		Command:  "date",
 		Contract: "stdin/v1",
 		Platforms: []string{
 			fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 		},
-		GtkaiCoreVersion: pluginmanifest.GtkaiCoreVersion{
+		PruneshCoreVersion: pluginmanifest.PruneshCoreVersion{
 			Version:    "0.1.0",
 			Constraint: "min",
 		},
@@ -244,7 +244,7 @@ func installTestDatePlugin(t *testing.T) string {
 	}
 
 	if _, err := plugininstall.Install(plugininstall.Options{
-		Module:      "github.com/gtk-ai/date",
+		Module:      "github.com/prunesh/date",
 		Version:     "v0.2.0",
 		CoreVersion: "0.11.0",
 		LocalDir:    dir,
@@ -314,7 +314,7 @@ func TestIntegrationVersion(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("exit %d", code)
 	}
-	if !strings.HasPrefix(out, "gtkai ") {
+	if !strings.HasPrefix(out, "prunesh ") {
 		t.Fatalf("unexpected version output: %q", out)
 	}
 }
@@ -334,8 +334,8 @@ func TestIntegrationHookPreDate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("hook-pre: %v", err)
 	}
-	if !strings.Contains(string(out), "gtkai date") {
-		t.Fatalf("hook-pre output does not contain 'gtkai date': %s", out)
+	if !strings.Contains(string(out), "prunesh date") {
+		t.Fatalf("hook-pre output does not contain 'prunesh date': %s", out)
 	}
 }
 
@@ -347,21 +347,21 @@ func TestIntegrationHookPreDateWithoutFilter(t *testing.T) {
 	cmd.Stdin = strings.NewReader(payload)
 	cmd.Env = append(os.Environ(), "HOME="+t.TempDir())
 	out, _ := cmd.Output()
-	if strings.Contains(string(out), "gtkai date") {
+	if strings.Contains(string(out), "prunesh date") {
 		t.Fatalf("hook must not rewrite date without installed filter, got: %s", out)
 	}
 }
 
 func TestIntegrationHookPreDateAlreadyProxied(t *testing.T) {
 	bin := buildBinary(t)
-	payload := `{"tool_name":"Bash","tool_input":{"command":"gtkai date"}}`
+	payload := `{"tool_name":"Bash","tool_input":{"command":"prunesh date"}}`
 
 	cmd := exec.Command(bin, "hook-pre", "--agent=claudecode")
 	cmd.Stdin = strings.NewReader(payload)
 	cmd.Env = append(os.Environ(), "HOME="+t.TempDir())
 	out, _ := cmd.Output()
 	// sin reescritura: el hook debe producir salida vacía
-	if strings.Contains(string(out), "gtkai") {
+	if strings.Contains(string(out), "prunesh") {
 		t.Fatalf("already proxied command must produce no rewrite output, got: %s", out)
 	}
 }
@@ -372,10 +372,10 @@ func TestIntegrationInit(t *testing.T) {
 
 	out, code := run(t, bin, dir, "init")
 	if code != 0 {
-		t.Fatalf("gtkai init: exit %d, output:\n%s", code, out)
+		t.Fatalf("prunesh init: exit %d, output:\n%s", code, out)
 	}
-	if _, err := os.Stat(filepath.Join(dir, ".gtk-ai")); err != nil {
-		t.Fatalf(".gtk-ai marker not created: %v", err)
+	if _, err := os.Stat(filepath.Join(dir, ".prunesh")); err != nil {
+		t.Fatalf(".prunesh marker not created: %v", err)
 	}
 }
 

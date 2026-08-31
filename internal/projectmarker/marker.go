@@ -1,5 +1,5 @@
-// Package projectmarker manages the .gtk-ai project marker.
-// The marker is an empty file that signals gtkai is active in the project.
+// Package projectmarker manages the .prunesh project marker.
+// The marker is an empty file that signals prunesh is active in the project.
 // Hooks exit immediately when it is absent.
 package projectmarker
 
@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-const MarkerName = ".gtk-ai"
+const MarkerName = ".prunesh"
 
 // ProjectRoot returns the git root of dir, or dir itself when not in a repo.
 func ProjectRoot(dir string) string {
@@ -22,13 +22,13 @@ func ProjectRoot(dir string) string {
 	return dir
 }
 
-// Exists reports whether a .gtk-ai marker is present at root.
+// Exists reports whether a .prunesh marker is present at root.
 func Exists(root string) bool {
 	_, err := os.Stat(filepath.Join(root, MarkerName))
 	return err == nil
 }
 
-// Create writes an empty .gtk-ai marker at root. Idempotent.
+// Create writes an empty .prunesh marker at root. Idempotent.
 func Create(root string) error {
 	path := filepath.Join(root, MarkerName)
 	if _, err := os.Stat(path); err == nil {

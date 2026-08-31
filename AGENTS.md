@@ -4,7 +4,7 @@
 
 Two independent phases:
 
-1. **Go binary** (`gtkai`): command proxy and token reduction. PreToolUse rewrites `git status` to `gtkai git status`; the binary runs the real command, injects flags, and filters output.
+1. **Go binary** (`prunesh`): command proxy and token reduction. PreToolUse rewrites `git status` to `prunesh git status`; the binary runs the real command, injects flags, and filters output.
 2. **Agent integrations**: Claude Code plugin, Cursor hooks, Codex hooks, and the OpenCode plugin. Each one registers hooks and invokes the binary.
 
 Never collapse both phases into one. The integrations depend on the binary. The binary does not write agent config files; `install.sh` does.
@@ -13,7 +13,7 @@ Never collapse both phases into one. The integrations depend on the binary. The 
 
 When changing the version, update every file that exposes it:
 
-- `cmd/gtkai/main.go`
+- `cmd/prunesh/main.go`
 - `.claude-plugin/plugin.json`
 - `.claude-plugin/marketplace.json`
 - `integrations/claude/.claude-plugin/plugin.json`
@@ -41,10 +41,10 @@ External plugins are binaries that speak the `stdin/v1` JSON protocol on stdin/s
 
 | Package | Role |
 |---|---|
-| `pluginregistry` | SQLite DB (`~/.gtk-ai/plugins.db`) — tracks installed plugins |
+| `pluginregistry` | SQLite DB (`~/.prunesh/plugins.db`) — tracks installed plugins |
 | `pluginsubprocess` | Adapts an external binary to `registry.Module` via stdin/v1 |
 | `plugininstall` | Downloads, validates, and installs plugin binaries |
-| `pluginmanifest` | Parses and validates `gtkai.json` plugin manifests |
+| `pluginmanifest` | Parses and validates `prunesh.json` plugin manifests |
 
 Built-in plugins in `plugins/` are compiled into the binary and registered via `init()`. External plugins use the subprocess adapter. Both implement `registry.Module` — the proxy treats them identically.
 
@@ -54,7 +54,7 @@ Built-in plugins in `plugins/` are compiled into the binary and registered via `
 author/<cmd>
 ```
 
-`author` is the GitHub org or username. `<cmd>` is the shell argv0 intercepted. For official plugins: `gtk-ai/date`, `gtk-ai/ls`, etc. Third-party authors use their own prefix.
+`author` is the GitHub org or username. `<cmd>` is the shell argv0 intercepted. For official plugins: `prunesh/date`, `prunesh/ls`, etc. Third-party authors use their own prefix.
 
 ### stdin/v1 protocol
 
@@ -81,9 +81,9 @@ Response (plugin binary → core):
 
 `changed: false` short-circuits processing — the original value passes through unchanged. `exit_code` is -1 when unknown (native tool post-hook).
 
-### gtkai.json manifest
+### prunesh.json manifest
 
-Every plugin ships a `gtkai.json` at the repo root:
+Every plugin ships a `prunesh.json` at the repo root:
 
 ```json
 {
@@ -91,14 +91,14 @@ Every plugin ships a `gtkai.json` at the repo root:
   "command": "<argv0>",
   "platforms": ["linux/amd64", "darwin/arm64"],
   "contract": "stdin/v1",
-  "gtkai-core-version": {
+  "prunesh-core-version": {
     "version": "0.11.0",
     "constraint": "min"
   }
 }
 ```
 
-`contract` must be `stdin/v1`. `constraint` is `"min"` (running gtkai >= version) or `"exact"` (must match). On install, the core validates the manifest and runs a contract check (sends `rewrite` and `filter_output` probes and expects valid JSON back) before writing anything to the registry.
+`contract` must be `stdin/v1`. `constraint` is `"min"` (running prunesh >= version) or `"exact"` (must match). On install, the core validates the manifest and runs a contract check (sends `rewrite` and `filter_output` probes and expects valid JSON back) before writing anything to the registry.
 
 ## Clean install validation
 
@@ -123,8 +123,8 @@ Every call to `hook-post` must pass `--agent=claudecode`. Every call to `hook-pr
 ### 2. Build and install the binary locally
 
 ```bash
-go build -o ~/.local/bin/gtkai ./cmd/gtkai/
-gtkai version
+go build -o ~/.local/bin/prunesh ./cmd/prunesh/
+prunesh version
 ```
 
 ### 3. Test with real payloads
@@ -133,7 +133,7 @@ PostToolUse — Bash output filtering:
 
 ```bash
 echo '{"tool_name":"Bash","tool_input":{"command":"git status"},"tool_response":{"stdout":"On branch main\nnothing to commit\n","interrupted":false},"tool_output":null}' \
-  | gtkai hook-post --agent=claudecode
+  | prunesh hook-post --agent=claudecode
 ```
 
 Expected: silent (no output) if nothing to filter, or filtered JSON on stdout.
@@ -141,30 +141,30 @@ Expected: silent (no output) if nothing to filter, or filtered JSON on stdout.
 PostToolUse — Read tool:
 
 ```bash
-echo '{"tool_name":"Read","tool_input":{"file_path":"README.md"},"tool_response":[{"type":"text","text":"# gtk-ai\n..."}],"tool_output":null}' \
-  | gtkai hook-post --agent=claudecode
+echo '{"tool_name":"Read","tool_input":{"file_path":"README.md"},"tool_response":[{"type":"text","text":"# prunesh\n..."}],"tool_output":null}' \
+  | prunesh hook-post --agent=claudecode
 ```
 
 PreToolUse — command rewrite:
 
 ```bash
 echo '{"tool_name":"Bash","tool_input":{"command":"git status"}}' \
-  | gtkai hook-pre --agent=claudecode
+  | prunesh hook-pre --agent=claudecode
 ```
 
-Expected: JSON with `{"hookSpecificOutput":{"hookEventName":"PreToolUse","updatedInput":{"command":"gtkai git status"}}}`.
+Expected: JSON with `{"hookSpecificOutput":{"hookEventName":"PreToolUse","updatedInput":{"command":"prunesh git status"}}}`.
 
 ### 4. Uninstall and reinstall the Claude Code plugin
 
 ```bash
-claude plugin uninstall gtk-ai
-claude plugin install -s user gtk-ai@gtk-ai
+claude plugin uninstall prunesh
+claude plugin install -s user prunesh@prunesh
 ```
 
 After reinstall, inspect the installed script to confirm it passes `--agent`:
 
 ```bash
-cat ~/.claude/plugins/cache/gtk-ai/*/scripts/gtkai-post-tool-use.sh | grep "hook-post"
+cat ~/.claude/plugins/cache/prunesh/*/scripts/prunesh-post-tool-use.sh | grep "hook-post"
 ```
 
 Must show `hook-post --agent=claudecode`, not bare `hook-post`.
@@ -174,13 +174,13 @@ Must show `hook-post --agent=claudecode`, not bare `hook-post`.
 For Cursor — verify the hooks scripts exist and pass the right flags:
 
 ```bash
-grep "hook-post\|hook-pre" ~/.cursor/hooks/gtkai-*.sh 2>/dev/null || echo "not installed"
+grep "hook-post\|hook-pre" ~/.cursor/hooks/prunesh-*.sh 2>/dev/null || echo "not installed"
 ```
 
 For Codex — same check:
 
 ```bash
-grep "hook-pre" ~/.codex/hooks/gtkai-pre-tool-use.sh 2>/dev/null || echo "not installed"
+grep "hook-pre" ~/.codex/hooks/prunesh-pre-tool-use.sh 2>/dev/null || echo "not installed"
 ```
 
 ---

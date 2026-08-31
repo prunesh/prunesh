@@ -1,4 +1,4 @@
-// Package pluginregistry persists installed external plugins in ~/.gtk-ai/plugins.db.
+// Package pluginregistry persists installed external plugins in ~/.prunesh/plugins.db.
 package pluginregistry
 
 import (
@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/storage"
+	"github.com/prunesh/prunesh/internal/storage"
 	_ "modernc.org/sqlite"
 )
 
@@ -42,7 +42,7 @@ type DB struct {
 	db *sql.DB
 }
 
-// Open opens or creates ~/.gtk-ai/plugins.db.
+// Open opens or creates ~/.prunesh/plugins.db.
 func Open() (*DB, error) {
 	dir, err := storage.Dir()
 	if err != nil {

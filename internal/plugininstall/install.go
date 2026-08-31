@@ -13,10 +13,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/pluginmanifest"
-	"github.com/jmeiracorbal/gtk-ai/internal/pluginregistry"
-	"github.com/jmeiracorbal/gtk-ai/internal/pluginsubprocess"
-	"github.com/jmeiracorbal/gtk-ai/internal/storage"
+	"github.com/prunesh/prunesh/internal/pluginmanifest"
+	"github.com/prunesh/prunesh/internal/pluginregistry"
+	"github.com/prunesh/prunesh/internal/pluginsubprocess"
+	"github.com/prunesh/prunesh/internal/storage"
 )
 
 // Options configures filter installation.
@@ -41,7 +41,7 @@ func ParseRef(ref string) (module, version string, err error) {
 	return ref[:i], ref[i+1:], nil
 }
 
-// Install downloads or builds the filter, validates gtkai.json, and registers it.
+// Install downloads or builds the filter, validates prunesh.json, and registers it.
 func Install(opts Options) (*pluginregistry.Record, error) {
 	if opts.Module == "" {
 		return nil, fmt.Errorf("module is empty")
@@ -169,7 +169,7 @@ func tryPrebuilt(module, version, platform string) (path string, ok bool) {
 		tag = "v" + tag
 	}
 	url := fmt.Sprintf("https://github.com/%s/releases/download/%s/%s-%s-%s", repo, tag, binName, osName, arch)
-	tmp := filepath.Join(os.TempDir(), fmt.Sprintf("gtkai-filter-prebuilt-%d", time.Now().UnixNano()))
+	tmp := filepath.Join(os.TempDir(), fmt.Sprintf("prunesh-filter-prebuilt-%d", time.Now().UnixNano()))
 	if err := downloadFile(url, tmp); err != nil {
 		return "", false
 	}
@@ -214,13 +214,13 @@ func fetchGoModule(module, version string) (string, error) {
 }
 
 func buildModule(module, version string) (string, error) {
-	tmpDir, err := os.MkdirTemp("", "gtkai-filter-build-*")
+	tmpDir, err := os.MkdirTemp("", "prunesh-filter-build-*")
 	if err != nil {
 		return "", err
 	}
 	defer os.RemoveAll(tmpDir)
 
-	init := exec.Command("go", "mod", "init", "gtkai-filter-build")
+	init := exec.Command("go", "mod", "init", "prunesh-filter-build")
 	init.Dir = tmpDir
 	init.Env = os.Environ()
 	if out, err := init.CombinedOutput(); err != nil {
@@ -233,7 +233,7 @@ func buildModule(module, version string) (string, error) {
 	if out, err := get.CombinedOutput(); err != nil {
 		return "", fmt.Errorf("go get %s: %w\n%s", modVersion, err, out)
 	}
-	tmpBin := filepath.Join(os.TempDir(), fmt.Sprintf("gtkai-filter-bin-%d", time.Now().UnixNano()))
+	tmpBin := filepath.Join(os.TempDir(), fmt.Sprintf("prunesh-filter-bin-%d", time.Now().UnixNano()))
 	pkg := module + "/cmd"
 	if err := goBuildDir(tmpDir, pkg, tmpBin); err != nil {
 		return "", err

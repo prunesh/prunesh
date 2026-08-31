@@ -7,14 +7,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/hook"
-	"github.com/jmeiracorbal/gtk-ai/internal/registry"
+	"github.com/prunesh/prunesh/internal/hook"
+	"github.com/prunesh/prunesh/internal/registry"
 
-	_ "github.com/jmeiracorbal/gtk-ai/plugins/find"
-	_ "github.com/jmeiracorbal/gtk-ai/plugins/git"
-	_ "github.com/jmeiracorbal/gtk-ai/plugins/grep"
-	_ "github.com/jmeiracorbal/gtk-ai/plugins/ls"
-	_ "github.com/jmeiracorbal/gtk-ai/plugins/rg"
+	_ "github.com/prunesh/prunesh/plugins/find"
+	_ "github.com/prunesh/prunesh/plugins/git"
+	_ "github.com/prunesh/prunesh/plugins/grep"
+	_ "github.com/prunesh/prunesh/plugins/ls"
+	_ "github.com/prunesh/prunesh/plugins/rg"
 )
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -421,7 +421,7 @@ func TestMCPSmallOutput(t *testing.T) {
 // ── passthrough ───────────────────────────────────────────────────────────────
 
 func TestMCPPassthrough(t *testing.T) {
-	t.Setenv("GTK_MCP_PASSTHROUGH_PATTERNS", "query_data*")
+	t.Setenv("PRUNESH_MCP_PASSTHROUGH_PATTERNS", "query_data*")
 	raw := strings.Repeat("x", 5000)
 
 	modified, _ := runHook(t, mcpPayload("mcp__myserver__query_data_large", raw))

@@ -1,11 +1,11 @@
 {
-  "name": "gtk-ai",
+  "name": "prunesh",
   "description": "PreToolUse rewrite plus PostToolUse filtering for shell, git, grep, find, ls, Read, and MCP tool output.",
   "version": "0.12.0",
   "author": {
     "name": "jmeiracorbal"
   },
-  "homepage": "https://github.com/jmeiracorbal/gtk-ai",
-  "repository": "https://github.com/jmeiracorbal/gtk-ai",
+  "homepage": "https://github.com/prunesh/prunesh",
+  "repository": "https://github.com/prunesh/prunesh",
   "license": "Apache-2.0"
 }

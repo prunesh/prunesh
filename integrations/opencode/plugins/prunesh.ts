@@ -3,14 +3,14 @@ import { existsSync } from "node:fs"
 import { spawnSync } from "node:child_process"
 
 function findGtkai(): string | null {
-  const fromPath = Bun.which("gtkai")
+  const fromPath = Bun.which("prunesh")
   if (fromPath) return fromPath
   const home = Bun.env.HOME
   if (!home) return null
   for (const candidate of [
-    `${home}/.local/bin/gtkai`,
-    "/usr/local/bin/gtkai",
-    "/opt/homebrew/bin/gtkai",
+    `${home}/.local/bin/prunesh`,
+    "/usr/local/bin/prunesh",
+    "/opt/homebrew/bin/prunesh",
   ]) {
     if (existsSync(candidate)) return candidate
   }
@@ -20,11 +20,11 @@ function findGtkai(): string | null {
 function markerExists(): boolean {
   const r = spawnSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf8" })
   const root = r.status === 0 ? r.stdout.trim() : process.cwd()
-  return existsSync(`${root}/.gtk-ai`)
+  return existsSync(`${root}/.prunesh`)
 }
 
-function runHook(gtkai: string, args: string[], payload: unknown): string {
-  const r = Bun.spawnSync([gtkai, ...args], {
+function runHook(prunesh: string, args: string[], payload: unknown): string {
+  const r = Bun.spawnSync([prunesh, ...args], {
     stdin: new TextEncoder().encode(JSON.stringify(payload)),
     stderr: "ignore",
   })
@@ -33,19 +33,19 @@ function runHook(gtkai: string, args: string[], payload: unknown): string {
 }
 
 export const GtkAI: Plugin = async () => {
-  const gtkai = findGtkai()
+  const prunesh = findGtkai()
   const argsByCall = new Map<string, Record<string, unknown>>()
 
   return {
     "tool.execute.before": async (input, output) => {
       argsByCall.set(input.callID, output.args as Record<string, unknown>)
-      if (!gtkai) return
+      if (!prunesh) return
       if (!markerExists()) return
       if (input.tool !== "bash" && input.tool !== "shell") return
       const command = (output.args as { command?: unknown }).command
       if (typeof command !== "string" || command === "") return
 
-      const raw = runHook(gtkai, ["hook-pre", "--agent=opencode"], {
+      const raw = runHook(prunesh, ["hook-pre", "--agent=opencode"], {
         tool_name: input.tool,
         tool_input: output.args,
       })
@@ -63,7 +63,7 @@ export const GtkAI: Plugin = async () => {
     "tool.execute.after": async (input, output) => {
       const args = argsByCall.get(input.callID)
       argsByCall.delete(input.callID)
-      if (!gtkai) return
+      if (!prunesh) return
       if (!markerExists()) return
       if (args === undefined) return
       if (input.tool === "bash" || input.tool === "shell") return
@@ -80,7 +80,7 @@ export const GtkAI: Plugin = async () => {
         toolInput = { file_path: filePath }
       }
 
-      const raw = runHook(gtkai, ["hook-post", "--agent=opencode"], {
+      const raw = runHook(prunesh, ["hook-post", "--agent=opencode"], {
         tool_name: isRead ? "Read" : input.tool,
         tool_input: toolInput,
         tool_response: [{ type: "text", text: output.output }],

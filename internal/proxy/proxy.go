@@ -9,18 +9,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/pluginregistry"
-	"github.com/jmeiracorbal/gtk-ai/internal/pluginsubprocess"
-	"github.com/jmeiracorbal/gtk-ai/internal/registry"
-	"github.com/jmeiracorbal/gtk-ai/internal/text"
-	"github.com/jmeiracorbal/gtk-ai/plugins/gain"
+	"github.com/prunesh/prunesh/internal/pluginregistry"
+	"github.com/prunesh/prunesh/internal/pluginsubprocess"
+	"github.com/prunesh/prunesh/internal/registry"
+	"github.com/prunesh/prunesh/internal/text"
+	"github.com/prunesh/prunesh/plugins/gain"
 )
 
 // Run executes name with args, filters stdout, records gain, and returns the child exit code.
 func Run(name string, args []string) int {
 	mod := resolveModule(name)
 	if mod == nil {
-		fmt.Fprintf(os.Stderr, "gtkai: unknown command %q\n", name)
+		fmt.Fprintf(os.Stderr, "prunesh: unknown command %q\n", name)
 		return 1
 	}
 
@@ -53,7 +53,7 @@ func Run(name string, args []string) int {
 	shown := registry.NeverWorse(rawOut, filtered)
 
 	if _, werr := os.Stdout.WriteString(shown); werr != nil {
-		fmt.Fprintf(os.Stderr, "gtkai: write stdout: %v\n", werr)
+		fmt.Fprintf(os.Stderr, "prunesh: write stdout: %v\n", werr)
 	}
 	if execErr != "" {
 		_, _ = os.Stderr.WriteString(execErr)
@@ -66,7 +66,7 @@ func Run(name string, args []string) int {
 	recordGain(label, rawOut, shown, elapsed)
 
 	if execFail != nil {
-		fmt.Fprintf(os.Stderr, "gtkai: %v\n", execFail)
+		fmt.Fprintf(os.Stderr, "prunesh: %v\n", execFail)
 		return 1
 	}
 	return execCode

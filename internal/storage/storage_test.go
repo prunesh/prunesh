@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/storage"
+	"github.com/prunesh/prunesh/internal/storage"
 )
 
 func TestDir_createsDirectory(t *testing.T) {
@@ -17,7 +17,7 @@ func TestDir_createsDirectory(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	want := filepath.Join(tmp, ".gtk-ai")
+	want := filepath.Join(tmp, ".prunesh")
 	if dir != want {
 		t.Fatalf("got %q, want %q", dir, want)
 	}

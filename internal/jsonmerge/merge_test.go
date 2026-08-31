@@ -53,7 +53,7 @@ func TestMergeFile_NewFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "hooks.json")
 
-	patch := `{"version":1,"hooks":{"preToolUse":[{"command":"/tmp/gtkai-pre.sh","matcher":"Shell"}]}}`
+	patch := `{"version":1,"hooks":{"preToolUse":[{"command":"/tmp/prunesh-pre.sh","matcher":"Shell"}]}}`
 	changed, err := runMerge(t, path, patch)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -76,7 +76,7 @@ func TestMergeFile_Idempotent(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "hooks.json")
 
-	patch := `{"hooks":{"preToolUse":[{"command":"/tmp/gtkai-pre.sh"}]}}`
+	patch := `{"hooks":{"preToolUse":[{"command":"/tmp/prunesh-pre.sh"}]}}`
 	if _, err := runMerge(t, path, patch); err != nil {
 		t.Fatalf("first merge: %v", err)
 	}
@@ -98,7 +98,7 @@ func TestMergeFile_ArrayDedup(t *testing.T) {
 		t.Fatalf("write initial: %v", err)
 	}
 
-	patch := `{"hooks":{"preToolUse":[{"command":"/tmp/gtkai-pre.sh"}]}}`
+	patch := `{"hooks":{"preToolUse":[{"command":"/tmp/prunesh-pre.sh"}]}}`
 	if _, err := runMerge(t, path, patch); err != nil {
 		t.Fatalf("merge: %v", err)
 	}

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/shell"
+	"github.com/prunesh/prunesh/internal/shell"
 )
 
 const stdinCap = 1 << 20
@@ -29,12 +29,12 @@ type openCodePreOutput struct {
 	Command string `json:"command"`
 }
 
-// RunPre reads a PreToolUse event, rewrites shell commands to gtkai when a module matches.
-// gtkaiBin is the binary path inserted into the rewritten command.
+// RunPre reads a PreToolUse event, rewrites shell commands to prunesh when a module matches.
+// pruneshBin is the binary path inserted into the rewritten command.
 // agent selects the stdout JSON contract of the target coding agent.
-func RunPre(r io.Reader, w io.Writer, gtkaiBin string, agent Agent) (bool, error) {
-	if gtkaiBin == "" {
-		return false, fmt.Errorf("gtkai binary path is empty")
+func RunPre(r io.Reader, w io.Writer, pruneshBin string, agent Agent) (bool, error) {
+	if pruneshBin == "" {
+		return false, fmt.Errorf("prunesh binary path is empty")
 	}
 	if agent == "" {
 		return false, fmt.Errorf("agent is empty")
@@ -68,7 +68,7 @@ func RunPre(r io.Reader, w io.Writer, gtkaiBin string, agent Agent) (bool, error
 		return false, nil
 	}
 
-	rewritten, changed := shell.Rewrite(cmd, gtkaiBin)
+	rewritten, changed := shell.Rewrite(cmd, pruneshBin)
 	if !changed {
 		return false, nil
 	}

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/projectmarker"
+	"github.com/prunesh/prunesh/internal/projectmarker"
 )
 
 func TestExistsFalseWhenAbsent(t *testing.T) {

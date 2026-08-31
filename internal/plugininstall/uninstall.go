@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/pluginregistry"
+	"github.com/prunesh/prunesh/internal/pluginregistry"
 )
 
 // Uninstall removes a filter by full id and deletes its install directory.

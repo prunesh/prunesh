@@ -7,32 +7,32 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/pluginmanifest"
+	"github.com/prunesh/prunesh/internal/pluginmanifest"
 )
 
-func TestValidateGtkaiCoreVersionMinPass(t *testing.T) {
+func TestValidatePruneshCoreVersionMinPass(t *testing.T) {
 	m := &pluginmanifest.Manifest{
-		GtkaiCoreVersion: pluginmanifest.GtkaiCoreVersion{
+		PruneshCoreVersion: pluginmanifest.PruneshCoreVersion{
 			Version:    "0.10.0",
 			Constraint: "min",
 		},
 	}
-	if err := m.ValidateGtkaiCoreVersion("0.10.0"); err != nil {
+	if err := m.ValidatePruneshCoreVersion("0.10.0"); err != nil {
 		t.Fatal(err)
 	}
-	if err := m.ValidateGtkaiCoreVersion("0.11.0"); err != nil {
+	if err := m.ValidatePruneshCoreVersion("0.11.0"); err != nil {
 		t.Fatal(err)
 	}
 }
 
-func TestValidateGtkaiCoreVersionMinFail(t *testing.T) {
+func TestValidatePruneshCoreVersionMinFail(t *testing.T) {
 	m := &pluginmanifest.Manifest{
-		GtkaiCoreVersion: pluginmanifest.GtkaiCoreVersion{
+		PruneshCoreVersion: pluginmanifest.PruneshCoreVersion{
 			Version:    "0.10.0",
 			Constraint: "min",
 		},
 	}
-	err := m.ValidateGtkaiCoreVersion("0.9.0")
+	err := m.ValidatePruneshCoreVersion("0.9.0")
 	if err == nil {
 		t.Fatal("expected error for version below min")
 	}
@@ -41,26 +41,26 @@ func TestValidateGtkaiCoreVersionMinFail(t *testing.T) {
 	}
 }
 
-func TestValidateGtkaiCoreVersionExactPass(t *testing.T) {
+func TestValidatePruneshCoreVersionExactPass(t *testing.T) {
 	m := &pluginmanifest.Manifest{
-		GtkaiCoreVersion: pluginmanifest.GtkaiCoreVersion{
+		PruneshCoreVersion: pluginmanifest.PruneshCoreVersion{
 			Version:    "0.10.0",
 			Constraint: "exact",
 		},
 	}
-	if err := m.ValidateGtkaiCoreVersion("0.10.0"); err != nil {
+	if err := m.ValidatePruneshCoreVersion("0.10.0"); err != nil {
 		t.Fatal(err)
 	}
 }
 
-func TestValidateGtkaiCoreVersionExactFail(t *testing.T) {
+func TestValidatePruneshCoreVersionExactFail(t *testing.T) {
 	m := &pluginmanifest.Manifest{
-		GtkaiCoreVersion: pluginmanifest.GtkaiCoreVersion{
+		PruneshCoreVersion: pluginmanifest.PruneshCoreVersion{
 			Version:    "0.10.0",
 			Constraint: "exact",
 		},
 	}
-	err := m.ValidateGtkaiCoreVersion("0.11.0")
+	err := m.ValidatePruneshCoreVersion("0.11.0")
 	if err == nil {
 		t.Fatal("expected error for exact mismatch")
 	}
@@ -69,14 +69,14 @@ func TestValidateGtkaiCoreVersionExactFail(t *testing.T) {
 	}
 }
 
-func TestValidateGtkaiCoreVersionUnknownConstraint(t *testing.T) {
+func TestValidatePruneshCoreVersionUnknownConstraint(t *testing.T) {
 	m := &pluginmanifest.Manifest{
-		GtkaiCoreVersion: pluginmanifest.GtkaiCoreVersion{
+		PruneshCoreVersion: pluginmanifest.PruneshCoreVersion{
 			Version:    "0.10.0",
 			Constraint: "latest",
 		},
 	}
-	err := m.ValidateGtkaiCoreVersion("0.10.0")
+	err := m.ValidatePruneshCoreVersion("0.10.0")
 	if err == nil {
 		t.Fatal("expected error for unknown constraint")
 	}
@@ -87,10 +87,10 @@ func TestValidateGtkaiCoreVersionUnknownConstraint(t *testing.T) {
 
 func TestValidateCommandEmpty(t *testing.T) {
 	m := &pluginmanifest.Manifest{
-		ID:       "gtk-ai/date",
+		ID:       "prunesh/date",
 		Command:  "",
 		Contract: "subprocess/v1",
-		GtkaiCoreVersion: pluginmanifest.GtkaiCoreVersion{
+		PruneshCoreVersion: pluginmanifest.PruneshCoreVersion{
 			Version:    "0.11.0",
 			Constraint: "min",
 		},
@@ -105,50 +105,50 @@ func TestValidateCommandEmpty(t *testing.T) {
 	}
 }
 
-func TestValidateGtkaiCoreVersionMinPrereleaseBase(t *testing.T) {
+func TestValidatePruneshCoreVersionMinPrereleaseBase(t *testing.T) {
 	m := &pluginmanifest.Manifest{
-		GtkaiCoreVersion: pluginmanifest.GtkaiCoreVersion{
+		PruneshCoreVersion: pluginmanifest.PruneshCoreVersion{
 			Version:    "0.11.0",
 			Constraint: "min",
 		},
 	}
-	if err := m.ValidateGtkaiCoreVersion("0.11.0-beta.2"); err != nil {
+	if err := m.ValidatePruneshCoreVersion("0.11.0-beta.2"); err != nil {
 		t.Fatal(err)
 	}
 }
 
-func TestValidateGtkaiCoreVersionMinPrereleaseBelowBase(t *testing.T) {
+func TestValidatePruneshCoreVersionMinPrereleaseBelowBase(t *testing.T) {
 	m := &pluginmanifest.Manifest{
-		GtkaiCoreVersion: pluginmanifest.GtkaiCoreVersion{
+		PruneshCoreVersion: pluginmanifest.PruneshCoreVersion{
 			Version:    "0.11.0",
 			Constraint: "min",
 		},
 	}
-	err := m.ValidateGtkaiCoreVersion("0.10.0-beta.1")
+	err := m.ValidatePruneshCoreVersion("0.10.0-beta.1")
 	if err == nil {
 		t.Fatal("expected error for pre-release below required base")
 	}
 }
 
 func TestParseGtkaiDateManifest(t *testing.T) {
-	dir, err := downloadModuleDir("github.com/gtk-ai/date@v0.12.0")
+	dir, err := downloadModuleDir("github.com/prunesh/date@v0.12.0")
 	if err != nil {
 		t.Fatal(err)
 	}
-	m, err := pluginmanifest.ParseFile(dir + "/gtkai.json")
+	m, err := pluginmanifest.ParseFile(dir + "/prunesh.json")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if m.ID != "gtk-ai/date" {
+	if m.ID != "prunesh/date" {
 		t.Fatalf("id %q", m.ID)
 	}
 	if m.Command != "date" {
 		t.Fatalf("command %q", m.Command)
 	}
-	if m.GtkaiCoreVersion.Constraint != "min" {
-		t.Fatalf("constraint %q", m.GtkaiCoreVersion.Constraint)
+	if m.PruneshCoreVersion.Constraint != "min" {
+		t.Fatalf("constraint %q", m.PruneshCoreVersion.Constraint)
 	}
-	if err := m.ValidateGtkaiCoreVersion("0.11.0"); err != nil {
+	if err := m.ValidatePruneshCoreVersion("0.11.0"); err != nil {
 		t.Fatal(err)
 	}
 }

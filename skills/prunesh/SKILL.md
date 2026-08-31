@@ -1,32 +1,32 @@
 ---
-name: gtk-ai
-description: Active when .gtkai exists at the repo root — transparent command proxy and output filter for git, grep, rg, find, ls, docker, cargo, go, python, pytest, npm, tree, and MCP Read output. Load to understand filtering behavior and avoid misinterpreting compact output.
+name: prunesh
+description: Active when .prunesh exists at the repo root — transparent command proxy and output filter for git, grep, rg, find, ls, docker, cargo, go, python, pytest, npm, tree, and MCP Read output. Load to understand filtering behavior and avoid misinterpreting compact output.
 ---
 
-# gtk-ai
+# prunesh
 
-gtk-ai intercepts shell commands before they run (PreToolUse rewrite) and compacts their output after (PostToolUse filter). The proxy is transparent: it exits silently when the binary is absent, and passes through any command it has no rule for.
+prunesh intercepts shell commands before they run (PreToolUse rewrite) and compacts their output after (PostToolUse filter). The proxy is transparent: it exits silently when the binary is absent, and passes through any command it has no rule for.
 
 ## 1. Verify the proxy is active for this project
 
-Before applying gtk-ai context:
+Before applying prunesh context:
 
 1. Resolve the Git repository root, or use the current workspace if it is not a Git repository.
-2. Read `<root>/.gtkai`.
+2. Read `<root>/.prunesh`.
 3. Continue only when the file is present.
-4. Confirm the binary is available: `command -v gtkai`.
+4. Confirm the binary is available: `command -v prunesh`.
 
-If `.gtkai` is missing, gtk-ai is not initialized for this project. Create it to enable filtering:
+If `.prunesh` is missing, prunesh is not initialized for this project. Create it to enable filtering:
 
 ```bash
-echo '{}' > .gtkai
+echo '{}' > .prunesh
 ```
 
-If `gtkai` is not in PATH, the binary is not installed. No filtering will occur regardless of the marker.
+If `prunesh` is not in PATH, the binary is not installed. No filtering will occur regardless of the marker.
 
 ## 2. Commands intercepted
 
-These commands are automatically rewritten to `gtkai <cmd> <args>` before running:
+These commands are automatically rewritten to `prunesh <cmd> <args>` before running:
 
 | Command | Effect |
 |---|---|
@@ -54,13 +54,13 @@ Compact or truncated output is intentional. Do not:
 If the full output is genuinely needed for the task, bypass filtering for that call:
 
 ```bash
-gtkai proxy <cmd> <args>
+prunesh proxy <cmd> <args>
 ```
 
 ## 4. Token analytics
 
 ```bash
-gtkai gain
+prunesh gain
 ```
 
 Shows cumulative token savings across sessions, broken down by command.

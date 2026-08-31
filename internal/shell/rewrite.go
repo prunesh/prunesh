@@ -1,12 +1,12 @@
-// Package shell rewrites agent Bash commands to gtkai proxy invocations.
+// Package shell rewrites agent Bash commands to prunesh proxy invocations.
 package shell
 
 import (
 	"strings"
 	"unicode"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/pluginregistry"
-	"github.com/jmeiracorbal/gtk-ai/internal/registry"
+	"github.com/prunesh/prunesh/internal/pluginregistry"
+	"github.com/prunesh/prunesh/internal/registry"
 )
 
 type tokenKind int
@@ -25,10 +25,10 @@ type token struct {
 	val  string
 }
 
-// Rewrite inserts gtkaiBin before a registered command.
-// gtkaiBin must be non-empty; the caller supplies it.
-func Rewrite(cmd, gtkaiBin string) (string, bool) {
-	if gtkaiBin == "" {
+// Rewrite inserts pruneshBin before a registered command.
+// pruneshBin must be non-empty; the caller supplies it.
+func Rewrite(cmd, pruneshBin string) (string, bool) {
+	if pruneshBin == "" {
 		return "", false
 	}
 	if strings.Contains(cmd, "<<") || strings.Contains(cmd, "$(") || strings.Contains(cmd, "`") {
@@ -47,7 +47,7 @@ func Rewrite(cmd, gtkaiBin string) (string, bool) {
 		if i > 0 {
 			out = append(out, cl.sep)
 		}
-		rw, did := rewriteClause(cl.toks, gtkaiBin)
+		rw, did := rewriteClause(cl.toks, pruneshBin)
 		if did {
 			changed = true
 			out = append(out, rw...)
@@ -98,13 +98,13 @@ func splitClauses(toks []token) []clause {
 	return clauses
 }
 
-func rewriteClause(toks []token, gtkaiBin string) ([]token, bool) {
+func rewriteClause(toks []token, pruneshBin string) ([]token, bool) {
 	stages, seps := splitPipeline(toks)
 	if len(stages) == 0 {
 		return nil, false
 	}
 	if len(stages) == 1 {
-		return rewriteSimple(stages[0], gtkaiBin)
+		return rewriteSimple(stages[0], pruneshBin)
 	}
 
 	last := stages[len(stages)-1]
@@ -112,7 +112,7 @@ func rewriteClause(toks []token, gtkaiBin string) ([]token, bool) {
 	if name != "grep" && name != "rg" {
 		return nil, false
 	}
-	rw, ok := rewriteSimple(last, gtkaiBin)
+	rw, ok := rewriteSimple(last, pruneshBin)
 	if !ok {
 		return nil, false
 	}
@@ -145,7 +145,7 @@ func splitPipeline(toks []token) (stages [][]token, seps []token) {
 	return stages, seps
 }
 
-func rewriteSimple(toks []token, gtkaiBin string) ([]token, bool) {
+func rewriteSimple(toks []token, pruneshBin string) ([]token, bool) {
 	words := wordVals(toks)
 	if len(words) == 0 {
 		return nil, false
@@ -165,7 +165,7 @@ func rewriteSimple(toks []token, gtkaiBin string) ([]token, bool) {
 	}
 
 	base := basename(words[i])
-	if base == "gtkai" {
+	if base == "prunesh" {
 		return nil, false
 	}
 	if registry.Get(base) == nil && !pluginregistry.HasActive(base) {
@@ -180,7 +180,7 @@ func rewriteSimple(toks []token, gtkaiBin string) ([]token, bool) {
 			continue
 		}
 		if wi == i {
-			out = append(out, token{kind: tokWord, val: gtkaiBin})
+			out = append(out, token{kind: tokWord, val: pruneshBin})
 			out = append(out, token{kind: tokWord, val: base})
 			wi++
 			continue

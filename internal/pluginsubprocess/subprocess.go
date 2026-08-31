@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/registry"
+	"github.com/prunesh/prunesh/internal/registry"
 )
 
 const contractTimeout = 2 * time.Second
@@ -88,7 +88,7 @@ func ContractCheck(binaryPath string) error {
 	if err := probeOperation(binaryPath, "rewrite", []string{"probe"}, "", 0, false); err != nil {
 		return fmt.Errorf("rewrite probe: %w", err)
 	}
-	if err := probeOperation(binaryPath, "filter_output", []string{"probe"}, "gtkai-contract-probe", 0, true); err != nil {
+	if err := probeOperation(binaryPath, "filter_output", []string{"probe"}, "prunesh-contract-probe", 0, true); err != nil {
 		return fmt.Errorf("filter_output probe: %w", err)
 	}
 	return nil

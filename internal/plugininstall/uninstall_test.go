@@ -12,10 +12,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/plugininstall"
-	"github.com/jmeiracorbal/gtk-ai/internal/pluginmanifest"
-	"github.com/jmeiracorbal/gtk-ai/internal/pluginregistry"
-	"github.com/jmeiracorbal/gtk-ai/internal/testhome"
+	"github.com/prunesh/prunesh/internal/plugininstall"
+	"github.com/prunesh/prunesh/internal/pluginmanifest"
+	"github.com/prunesh/prunesh/internal/pluginregistry"
+	"github.com/prunesh/prunesh/internal/testhome"
 )
 
 // minimalPluginSrc is a stdin/v1 compliant binary for tests.
@@ -45,7 +45,7 @@ func main() {
 }
 `
 
-// buildLocalPlugin compiles a stub binary and writes gtkai.json to dir,
+// buildLocalPlugin compiles a stub binary and writes prunesh.json to dir,
 // returning the dir path so it can be passed as Options.LocalDir.
 func buildLocalPlugin(t *testing.T, id, argv0 string) string {
 	t.Helper()
@@ -69,7 +69,7 @@ func buildLocalPlugin(t *testing.T, id, argv0 string) string {
 		Platforms: []string{
 			fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 		},
-		GtkaiCoreVersion: pluginmanifest.GtkaiCoreVersion{
+		PruneshCoreVersion: pluginmanifest.PruneshCoreVersion{
 			Version:    "0.1.0",
 			Constraint: "min",
 		},
@@ -119,9 +119,9 @@ func TestInstallConflictAbortsWithoutReplace(t *testing.T) {
 	}
 
 	// Attempt to install a second plugin for the same argv0 without --replace.
-	localDir2 := buildLocalPlugin(t, "gtk-ai/date", "date")
+	localDir2 := buildLocalPlugin(t, "prunesh/date", "date")
 	_, err = plugininstall.Install(plugininstall.Options{
-		Module:      "github.com/gtk-ai/date",
+		Module:      "github.com/prunesh/date",
 		Version:     "v0.2.0",
 		CoreVersion: "0.11.0",
 		LocalDir:    localDir2,
@@ -160,10 +160,10 @@ func TestInstallConflictWithReplace(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	localDir2 := buildLocalPlugin(t, "gtk-ai/date", "date")
+	localDir2 := buildLocalPlugin(t, "prunesh/date", "date")
 	stderr := captureStderr(t, func() {
 		if _, err := plugininstall.Install(plugininstall.Options{
-			Module:      "github.com/gtk-ai/date",
+			Module:      "github.com/prunesh/date",
 			Version:     "v0.2.0",
 			CoreVersion: "0.11.0",
 			LocalDir:    localDir2,
@@ -185,7 +185,7 @@ func TestInstallConflictWithReplace(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if active == nil || active.ID != "gtk-ai/date" {
+	if active == nil || active.ID != "prunesh/date" {
 		t.Fatalf("active filter: %+v", active)
 	}
 	got, err := db.Get("acme/date")
@@ -200,9 +200,9 @@ func TestInstallConflictWithReplace(t *testing.T) {
 func TestUninstallRemovesInstallDir(t *testing.T) {
 	testhome.Isolated(t)
 
-	localDir := buildLocalPlugin(t, "gtk-ai/date", "date")
+	localDir := buildLocalPlugin(t, "prunesh/date", "date")
 	rec, err := plugininstall.Install(plugininstall.Options{
-		Module:      "github.com/gtk-ai/date",
+		Module:      "github.com/prunesh/date",
 		Version:     "v0.2.0",
 		CoreVersion: "0.11.0",
 		LocalDir:    localDir,
@@ -254,9 +254,9 @@ func TestUninstallPromotesPreviousFilter(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	newerDir := buildLocalPlugin(t, "gtk-ai/date", "date")
+	newerDir := buildLocalPlugin(t, "prunesh/date", "date")
 	newer, err := plugininstall.Install(plugininstall.Options{
-		Module:      "github.com/gtk-ai/date",
+		Module:      "github.com/prunesh/date",
 		Version:     "v0.2.0",
 		CoreVersion: "0.11.0",
 		LocalDir:    newerDir,

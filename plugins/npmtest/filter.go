@@ -3,7 +3,7 @@ package npmtest
 import (
 	"strings"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/registry"
+	"github.com/prunesh/prunesh/internal/registry"
 )
 
 const (

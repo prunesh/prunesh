@@ -10,17 +10,17 @@ import (
 func TestShippedAgentAssets(t *testing.T) {
 	root := filepath.Join("..", "..")
 	files := []string{
-		"integrations/claude/scripts/gtkai-pre-tool-use.sh",
-		"integrations/claude/scripts/gtkai-post-tool-use.sh",
+		"integrations/claude/scripts/prunesh-pre-tool-use.sh",
+		"integrations/claude/scripts/prunesh-post-tool-use.sh",
 		"integrations/claude/hooks/hooks.json",
-		"integrations/cursor/hooks/gtkai-pre-tool-use.sh",
-		"integrations/cursor/hooks/gtkai-post-tool-use.sh",
-		"integrations/cursor/rules/gtk-ai.mdc",
-		"integrations/codex/hooks/gtkai-pre-tool-use.sh",
+		"integrations/cursor/hooks/prunesh-pre-tool-use.sh",
+		"integrations/cursor/hooks/prunesh-post-tool-use.sh",
+		"integrations/cursor/rules/prunesh.mdc",
+		"integrations/codex/hooks/prunesh-pre-tool-use.sh",
 		"integrations/codex/AGENTS.md",
-		"integrations/opencode/plugins/gtkai.ts",
+		"integrations/opencode/plugins/prunesh.ts",
 		"integrations/opencode/AGENTS.md",
-		"skills/gtk-ai/SKILL.md",
+		"skills/prunesh/SKILL.md",
 	}
 	for _, rel := range files {
 		path := filepath.Join(root, rel)
@@ -32,14 +32,14 @@ func TestShippedAgentAssets(t *testing.T) {
 
 func TestClaudePluginScriptsPassAgent(t *testing.T) {
 	root := filepath.Join("..", "..")
-	pre, err := os.ReadFile(filepath.Join(root, "integrations/claude/scripts/gtkai-pre-tool-use.sh"))
+	pre, err := os.ReadFile(filepath.Join(root, "integrations/claude/scripts/prunesh-pre-tool-use.sh"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(string(pre), "hook-pre --agent=claudecode") {
 		t.Fatal("claude pre script must pass --agent=claudecode")
 	}
-	post, err := os.ReadFile(filepath.Join(root, "integrations/claude/scripts/gtkai-post-tool-use.sh"))
+	post, err := os.ReadFile(filepath.Join(root, "integrations/claude/scripts/prunesh-post-tool-use.sh"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,9 +54,9 @@ func TestCursorAndCodexScriptsPassAgent(t *testing.T) {
 		path   string
 		needle string
 	}{
-		{"integrations/cursor/hooks/gtkai-pre-tool-use.sh", "hook-pre --agent=cursor"},
-		{"integrations/cursor/hooks/gtkai-post-tool-use.sh", "hook-post --agent=cursor"},
-		{"integrations/codex/hooks/gtkai-pre-tool-use.sh", "hook-pre --agent=codex"},
+		{"integrations/cursor/hooks/prunesh-pre-tool-use.sh", "hook-pre --agent=cursor"},
+		{"integrations/cursor/hooks/prunesh-post-tool-use.sh", "hook-post --agent=cursor"},
+		{"integrations/codex/hooks/prunesh-pre-tool-use.sh", "hook-pre --agent=codex"},
 	}
 	for _, tc := range cases {
 		data, err := os.ReadFile(filepath.Join(root, tc.path))

@@ -1,5 +1,5 @@
 {
-  "description": "gtk-ai hooks: PreToolUse rewrites Bash commands to gtkai; PostToolUse filters Read and MCP",
+  "description": "prunesh hooks: PreToolUse rewrites Bash commands to prunesh; PostToolUse filters Read and MCP",
   "hooks": {
     "PreToolUse": [
       {
@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/gtkai-pre-tool-use.sh\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/prunesh-pre-tool-use.sh\"",
             "timeout": 10
           }
         ]
@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/gtkai-post-tool-use.sh\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/prunesh-post-tool-use.sh\"",
             "timeout": 10
           }
         ]

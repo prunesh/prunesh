@@ -1,4 +1,4 @@
-// Package storage resolves the gtk-ai data directory (~/.gtk-ai).
+// Package storage resolves the prunesh data directory (~/.prunesh).
 package storage
 
 import (
@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 )
 
-// Dir returns ~/.gtk-ai and ensures it exists.
+// Dir returns ~/.prunesh and ensures it exists.
 func Dir() (string, error) {
 	home := os.Getenv("HOME")
 	if home == "" {
 		return "", fmt.Errorf("HOME is not set")
 	}
-	dir := filepath.Join(home, ".gtk-ai")
+	dir := filepath.Join(home, ".prunesh")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", err
 	}

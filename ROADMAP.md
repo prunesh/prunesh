@@ -1,8 +1,8 @@
-# Roadmap: gtk-ai vs rtk 0.42.4
+# Roadmap: prunesh vs rtk 0.42.4
 
-Compared against [rtk-ai/rtk](https://github.com/rtk-ai/rtk) `0.42.4` (`ba7a9ce`). gtk-ai is at `0.11.0-beta.2`.
+Compared against [rtk-ai/rtk](https://github.com/rtk-ai/rtk) `0.42.4` (`ba7a9ce`). prunesh is at `0.11.0-beta.2`.
 
-**Product decision (2026-08-17):** gtk follows the same path as rtk. It rewrites the command **before** execution (`PreToolUse` → `git status` becomes `gtkai git status`). gtkai runs the real binary, injects flags, and filters the output. Post-filtering remains only for Claude Code native tools that do not go through Bash (`Read`, MCP, `Grep`, `Glob`).
+**Product decision (2026-08-17):** gtk follows the same path as rtk. It rewrites the command **before** execution (`PreToolUse` → `git status` becomes `prunesh git status`). prunesh runs the real binary, injects flags, and filters the output. Post-filtering remains only for Claude Code native tools that do not go through Bash (`Read`, MCP, `Grep`, `Glob`).
 
 ---
 
@@ -15,13 +15,13 @@ Today gtk filters *after* the fact. `Module.Rewrite` exists and is never called.
 ```text
 Without gtk:  Claude --git status--> shell --> git --> raw stdout --> Claude
 
-With gtk:     Claude --git status--> PreToolUse --> gtkai hook-pre
+With gtk:     Claude --git status--> PreToolUse --> prunesh hook-pre
                                                        |
                                                        v
-                                          command: gtkai git status
+                                          command: prunesh git status
                                                        |
                                                        v
-                                          gtkai runs git (injected flags)
+                                          prunesh runs git (injected flags)
                                           filters stdout/stderr
                                           records gain
                                                        |
@@ -29,16 +29,16 @@ With gtk:     Claude --git status--> PreToolUse --> gtkai hook-pre
                                           Claude receives compact output
 ```
 
-Claude never sees the rewrite. The agent calls `git status`; the hook replaces it with `gtkai git status`.
+Claude never sees the rewrite. The agent calls `git status`; the hook replaces it with `prunesh git status`.
 
 ### What this changes (and what it does not)
 
 | Piece | Change |
 |---|---|
 | Plugin | Registers `PreToolUse` (matcher `Bash`) in addition to `PostToolUse`. The plugin still configures Claude Code. |
-| Binary | Becomes a CLI proxy: `gtkai git status`, `gtkai ls`, `gtkai hook-pre`. It runs the real command. |
+| Binary | Becomes a CLI proxy: `prunesh git status`, `prunesh ls`, `prunesh hook-pre`. It runs the real command. |
 | `Rewrite()` | Stops being dead code: injects flags (`git status --porcelain -b`, `go test -json`, `git log --pretty=…`). |
-| `FilterOutput` | Runs **inside** the proxy, on output gtkai just captured. |
+| `FilterOutput` | Runs **inside** the proxy, on output prunesh just captured. |
 | `PostToolUse` | Stays for `Read`, `mcp__*`, and later `Grep`/`Glob`. It is not the Bash path. |
 | Repo phases | Still two pieces: the plugin registers hooks; the binary filters and now also executes. They stay separate. |
 
@@ -48,19 +48,19 @@ Do not copy from rtk: multi-agent `rtk init`, the TOML engine, `discover`/`learn
 
 One PR (or a few) that makes the rtk path work end-to-end for **one** command, plus the infrastructure for the rest.
 
-1. **`gtkai hook-pre`**: reads PreToolUse JSON, rewrites `tool_input.command` when the binary is registered, writes `updatedInput`. If there is no module, pass through.
-2. **Plugin**: `PreToolUse` + `gtkai-pre-tool-use.sh`. Matcher `Bash`. Short timeout.
-3. **CLI proxy**: `gtkai <module> [args…]` runs the command, captures stdout+stderr, filters, prints, propagates the exit code, records `gain`.
+1. **`prunesh hook-pre`**: reads PreToolUse JSON, rewrites `tool_input.command` when the binary is registered, writes `updatedInput`. If there is no module, pass through.
+2. **Plugin**: `PreToolUse` + `prunesh-pre-tool-use.sh`. Matcher `Bash`. Short timeout.
+3. **CLI proxy**: `prunesh <module> [args…]` runs the command, captures stdout+stderr, filters, prints, propagates the exit code, records `gain`.
 4. **Command detection**: the first word is not enough. Cover `/usr/bin/git`, `sudo git`, `git -C dir status`, `VAR=1 git status`. Pipelines: rewrite only the last stage if it is safe (`grep`/`rg`); otherwise pass through.
 5. **`never_worse` guard**: if filtering estimates more tokens than the raw output, print the raw output.
 6. **Strip ANSI** before parsing.
-7. **First end-to-end command: `git status`**. Rewrite to `gtkai git status`. The module injects `--porcelain -b` (unless the user already asked for another format) and groups by state.
+7. **First end-to-end command: `git status`**. Rewrite to `prunesh git status`. The module injects `--porcelain -b` (unless the user already asked for another format) and groups by state.
 
 Done when:
 
-- `git status` in Claude Code is rewritten to `gtkai git status` (PreToolUse test payload).
-- `gtkai git status` in a terminal produces compact output and git's exit code.
-- `gtkai gain` records that invocation.
+- `git status` in Claude Code is rewritten to `prunesh git status` (PreToolUse test payload).
+- `prunesh git status` in a terminal produces compact output and git's exit code.
+- `prunesh gain` records that invocation.
 - An unregistered command (`echo hi`) is left untouched.
 
 Until this is green, do not add new modules. The current Bash post-filter is removed once the proxy covers existing modules; until then it may coexist so there is no coverage hole.
@@ -130,7 +130,7 @@ Out of scope until the core and the runners cover a typical session: rtk TOML fi
 
 ## 4. Filter plugins — namespaced filters (business logic)
 
-This is **not** the Claude Code plugin system and not any agent hook/marketplace. It is the domain model inside gtkai: who implements filtering for which shell command.
+This is **not** the Claude Code plugin system and not any agent hook/marketplace. It is the domain model inside prunesh: who implements filtering for which shell command.
 
 Today the registry collapses **command = filter** (`ls` → one `Module`). The target model separates **identity** from **what gets intercepted**.
 
@@ -142,14 +142,14 @@ Every filter has a full name:
 author/<cmd>
 ```
 
-Examples: `gtk-ai/ls`, `gtk-ai/git`, `gtk-ai/date`, `jmeiracorbal/ls`.
+Examples: `prunesh/ls`, `prunesh/git`, `prunesh/date`, `jmeiracorbal/ls`.
 
 - `author` — who owns the implementation.
 - `<cmd>` — the shell argv0 this filter is for (`ls`, `git`, `date`, …).
 
-Built-in filters ship as `gtk-ai/<cmd>` (compiled in). Third-party filters use the same naming rule.
+Built-in filters ship as `prunesh/<cmd>` (compiled in). Third-party filters use the same naming rule.
 
-The agent still runs `ls`, `git status`, … PreToolUse still rewrites to `gtkai ls`, `gtkai git status`. The namespace never appears in the Bash command Claude sees.
+The agent still runs `ls`, `git status`, … PreToolUse still rewrites to `prunesh ls`, `prunesh git status`. The namespace never appears in the Bash command Claude sees.
 
 ### Contract
 
@@ -162,7 +162,7 @@ Each filter declares, at minimum:
 
 Behavior matches today’s `Module`: `Rewrite`, `FilterOutput`, optional `ExtraEnv`. The core keeps ANSI strip, `never_worse`, and `gain`; filters do not bypass them.
 
-A filter owns the full surface of that command or passes through: if it cannot handle an invocation, `Rewrite` returns no change and gtkai runs the original argv unchanged.
+A filter owns the full surface of that command or passes through: if it cannot handle an invocation, `Rewrite` returns no change and prunesh runs the original argv unchanged.
 
 ### Which filter is active
 
@@ -175,7 +175,7 @@ On **install**, when another filter already targets the same command:
 - Abort with an error unless `--replace` is passed (same `id` upgrades always allowed).
 - With `--replace`, the newly installed filter becomes active; the previous filter stays installed but inactive.
 
-On **uninstall** (`gtkai plugin uninstall author/<cmd>` — full id only):
+On **uninstall** (`prunesh plugin uninstall author/<cmd>` — full id only):
 
 - Remove that filter by `id`.
 - If **no filters remain** for that shell command → do not rewrite it in PreToolUse; pass through.
@@ -186,9 +186,9 @@ Listing installed filters and which one is active per command is part of this ph
 ### CLI (sketch)
 
 ```text
-gtkai plugin install <path-or-package> [--replace]   # abort on command conflict unless --replace
-gtkai plugin uninstall gtk-ai/ls   # by full id only
-gtkai plugin list                        # all filters; mark active per command
+prunesh plugin install <path-or-package> [--replace]   # abort on command conflict unless --replace
+prunesh plugin uninstall prunesh/ls   # by full id only
+prunesh plugin list                        # all filters; mark active per command
 ```
 
 Exact transport (Go package, manifest + subprocess, …) is an implementation detail. The rules above are not.
@@ -199,22 +199,22 @@ Exact transport (Go package, manifest + subprocess, …) is an implementation de
 - Not rtk’s TOML rule engine.
 - Not auto-discovery from PATH or GitHub without an explicit `filter install`.
 
-Third-party filters are installed into gtkai’s filter registry; they do not register agent hooks.
+Third-party filters are installed into prunesh’s filter registry; they do not register agent hooks.
 
-Done when: native `gtk-ai/*` filters use the same registry; install/uninstall/list work; conflict and uninstall semantics above have tests; `hook-pre` resolves the active filter by shell command before rewrite.
+Done when: native `prunesh/*` filters use the same registry; install/uninstall/list work; conflict and uninstall semantics above have tests; `hook-pre` resolves the active filter by shell command before rewrite.
 
-**Status (0.11.x beta):** registry, `filter install|uninstall|list`, conflict/`--replace` semantics, active resolution, and subprocess transport are implemented. [gtk-ai/date](https://github.com/gtk-ai/date) is the first external-only filter and the reference template (`gtk-ai/<cmd>`). Remaining built-ins migrate gradually (see below and ARCHITECTURE.md § Built-in migration).
+**Status (0.11.x beta):** registry, `filter install|uninstall|list`, conflict/`--replace` semantics, active resolution, and subprocess transport are implemented. [prunesh/date](https://github.com/prunesh/date) is the first external-only filter and the reference template (`prunesh/<cmd>`). Remaining built-ins migrate gradually (see below and ARCHITECTURE.md § Built-in migration).
 
 ### Built-in migration roadmap
 
-Each row is one external repository. One repo per shell argv0 (or a small group when they share the same implementation). Template: [gtk-ai/date](https://github.com/gtk-ai/date) + [HOWTO.md](https://github.com/gtk-ai/date/blob/main/HOWTO.md).
+Each row is one external repository. One repo per shell argv0 (or a small group when they share the same implementation). Template: [prunesh/date](https://github.com/prunesh/date) + [HOWTO.md](https://github.com/prunesh/date/blob/main/HOWTO.md).
 
 **Per-filter steps:**
 
-1. Publish `github.com/gtk-ai/<cmd>` with `gtkai.json` (`command`, `stdin/v1`, semver constraint).
-2. Users install it with `gtkai plugin install <module@version>`.
+1. Publish `github.com/prunesh/<cmd>` with `prunesh.json` (`command`, `stdin/v1`, semver constraint).
+2. Users install it with `prunesh plugin install <module@version>`.
 3. External plugin shadows the built-in (active = most recent install).
-4. Remove the blank import from `cmd/gtkai/main.go` only when the command should require an external install (as with `date`).
+4. Remove the blank import from `cmd/prunesh/main.go` only when the command should require an external install (as with `date`).
 
 Until step 4, the built-in stays compiled in as fallback.
 
@@ -222,7 +222,7 @@ Until step 4, the built-in stays compiled in as fallback.
 
 | Repo | `command` | Built-in removed | Notes |
 |---|---|---|---|
-| [gtk-ai/date](https://github.com/gtk-ai/date) | `date` | yes | Reference template; install with `gtkai plugin install github.com/gtk-ai/date@v0.13.0` |
+| [prunesh/date](https://github.com/prunesh/date) | `date` | yes | Reference template; install with `prunesh plugin install github.com/prunesh/date@v0.13.0` |
 
 #### Pending — high priority
 
@@ -230,10 +230,10 @@ Frequent in agent sessions; mature built-in logic; good next targets after `date
 
 | Repo | `command` | Built-in module | Notes |
 |---|---|---|---|
-| `gtk-ai/ls` | `ls` | `modules/ls` | Very frequent; `-l` + grouping + noise dirs |
-| `gtk-ai/grep` | `grep` | `modules/grep` | High volume; injects `-nH`; grouping shared with `rg` |
-| `gtk-ai/find` | `find` | `modules/find` | High savings (~64% in bench); group by directory |
-| `gtk-ai/git` | `git` | `modules/git` | Largest module: status, log, diff, branch, show, push/pull/fetch/stash |
+| `prunesh/ls` | `ls` | `modules/ls` | Very frequent; `-l` + grouping + noise dirs |
+| `prunesh/grep` | `grep` | `modules/grep` | High volume; injects `-nH`; grouping shared with `rg` |
+| `prunesh/find` | `find` | `modules/find` | High savings (~64% in bench); group by directory |
+| `prunesh/git` | `git` | `modules/git` | Largest module: status, log, diff, branch, show, push/pull/fetch/stash |
 
 **Recommended order for this tier:** `ls` → `grep` → `find` → `git` (leave `git` last within the tier — most subcommands and edge cases).
 
@@ -243,27 +243,27 @@ Runners and tooling; logic is stable but less universal than core shell commands
 
 | Repo | `command` | Built-in module | Notes |
 |---|---|---|---|
-| `gtk-ai/go` | `go` | `modules/go` | `test -json`, `build`, `vet` |
-| `gtk-ai/cargo` | `cargo` | `modules/cargo` | test/build/clippy/check; collapse `Compiling` |
-| `gtk-ai/pytest` | `pytest` | `modules/pytest` | failures + short traceback |
-| `gtk-ai/npm` | `npm` | `modules/npmtest` | test runners; strip ANSI |
-| `gtk-ai/pnpm` | `pnpm` | `modules/npmtest` | same filter family as `npm` |
-| `gtk-ai/npx` | `npx` | `modules/npmtest` | vitest/jest via npx |
-| `gtk-ai/docker` | `docker` | `modules/docker` | read-only: `ps`, `images`, `logs`, `compose ps/logs` |
+| `prunesh/go` | `go` | `modules/go` | `test -json`, `build`, `vet` |
+| `prunesh/cargo` | `cargo` | `modules/cargo` | test/build/clippy/check; collapse `Compiling` |
+| `prunesh/pytest` | `pytest` | `modules/pytest` | failures + short traceback |
+| `prunesh/npm` | `npm` | `modules/npmtest` | test runners; strip ANSI |
+| `prunesh/pnpm` | `pnpm` | `modules/npmtest` | same filter family as `npm` |
+| `prunesh/npx` | `npx` | `modules/npmtest` | vitest/jest via npx |
+| `prunesh/docker` | `docker` | `modules/docker` | read-only: `ps`, `images`, `logs`, `compose ps/logs` |
 
-`python` / `python3` delegate to pytest when `-m pytest`; migrate with `gtk-ai/pytest` or a dedicated `gtk-ai/python` if the argv0 must be intercepted separately.
+`python` / `python3` delegate to pytest when `-m pytest`; migrate with `prunesh/pytest` or a dedicated `prunesh/python` if the argv0 must be intercepted separately.
 
 #### Pending — low priority
 
 | Repo | `command` | Built-in module | Notes |
 |---|---|---|---|
-| `gtk-ai/rg` | `rg` | `modules/rg` | Grouping shared with `grep`; pipeline last-stage rewrite |
-| `gtk-ai/tree` | `tree` | `modules/tree` | entry count + capped listing |
-| `gtk-ai/cat` | `cat`, `head`, `tail` | `modules/readcmd` | one repo, three `command` values or three repos; reuses `read.FilterContent` |
+| `prunesh/rg` | `rg` | `modules/rg` | Grouping shared with `grep`; pipeline last-stage rewrite |
+| `prunesh/tree` | `tree` | `modules/tree` | entry count + capped listing |
+| `prunesh/cat` | `cat`, `head`, `tail` | `modules/readcmd` | one repo, three `command` values or three repos; reuses `read.FilterContent` |
 
 #### Not built-in migration
 
-These stay in the core or are separate tracks — do not confuse with `gtk-ai/*` shell filters:
+These stay in the core or are separate tracks — do not confuse with `prunesh/*` shell filters:
 
 | Track | Item | Where |
 |---|---|---|
@@ -277,18 +277,18 @@ These stay in the core or are separate tracks — do not confuse with `gtk-ai/*`
 
 - **Migrated:** 1 (`date`)
 - **Pending repos:** 12–15 (17 argv0 counting `cat`/`head`/`tail` and `npm`/`pnpm`/`npx` separately)
-- **Next filter to add:** `gtk-ai/ls`
+- **Next filter to add:** `prunesh/ls`
 
 ---
 
 ## Current vs target
 
-| | gtk-ai 0.11.x beta | Remaining |
+| | prunesh 0.11.x beta | Remaining |
 |---|---|---|
 | Agents | Claude Code plugin; Cursor / Codex hooks; OpenCode plugin | — |
-| Bash | `PreToolUse` rewrites registered commands to `gtkai …`; the binary runs and filters | — |
+| Bash | `PreToolUse` rewrites registered commands to `prunesh …`; the binary runs and filters | — |
 | Filter identity | Namespaced `author/<cmd>`; active = most recent install; built-in fallback | Migrate remaining built-ins (see §4 migration roadmap) |
-| `Rewrite()` | Injects flags for `git status`, `git log`, `ls`, `grep`, `go test -json`, … | External `gtk-ai/*` repos per command |
+| `Rewrite()` | Injects flags for `git status`, `git log`, `ls`, `grep`, `go test -json`, … | External `prunesh/*` repos per command |
 | `Read` / MCP | `PostToolUse` | native `Grep`/`Glob` |
 | `gain` | Every proxy execution | Per-filter attribution by `id` |
 | Commands | Built-ins: find, ls, git, grep, rg, cat/head/tail, tree, go, cargo, pytest, npm/pnpm/npx, docker; external: date | 12–15 external repos (§4 migration roadmap); native Grep/Glob |
@@ -315,10 +315,10 @@ Filtering stays heuristic. No semantic compression.
 2. Corrections to current modules + `cat`/`head`/`tail`/`tree` + remaining git (section 2) — **done in 0.5.0**.
 3. Runners (section 3) — **done in 0.9.0** (go, cargo, pytest, npm, docker).
 4. Multi-agent hooks (Cursor, Codex, OpenCode) — **done in 0.10.0**.
-5. Filter plugin registry + install/uninstall/list + migrate natives to `gtk-ai/*` (section 4) — **core done in 0.11.x beta**; per-command migration ongoing (see §4 **Built-in migration roadmap**; next: `gtk-ai/ls`).
+5. Filter plugin registry + install/uninstall/list + migrate natives to `prunesh/*` (section 4) — **core done in 0.11.x beta**; per-command migration ongoing (see §4 **Built-in migration roadmap**; next: `prunesh/ls`).
 6. Ecosystem commands as third-party filters according to `gain` (section 3 ecosystem).
 
-The git tag must match every version-bearing file (`cmd/gtkai/main.go`, plugin json, `mcpscan`, README).
+The git tag must match every version-bearing file (`cmd/prunesh/main.go`, plugin json, `mcpscan`, README).
 
 ---
 

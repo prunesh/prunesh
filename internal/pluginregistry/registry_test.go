@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/pluginregistry"
+	"github.com/prunesh/prunesh/internal/pluginregistry"
 )
 
 func TestInstallAndActive(t *testing.T) {
@@ -19,13 +19,13 @@ func TestInstallAndActive(t *testing.T) {
 	defer db.Close()
 
 	rec := pluginregistry.Record{
-		ID:           "gtk-ai/date",
-		Module:       "github.com/gtk-ai/date",
+		ID:           "prunesh/date",
+		Module:       "github.com/prunesh/date",
 		Version:      "v0.11.0",
 		Argv0:        "date",
 		Contract:     "subprocess/v1",
 		BinaryPath:   filepath.Join(home, "date"),
-		ManifestPath: filepath.Join(home, "gtkai.json"),
+		ManifestPath: filepath.Join(home, "prunesh.json"),
 		InstalledAt:  time.Now(),
 	}
 	if err := db.Install(rec); err != nil {
@@ -58,13 +58,13 @@ func TestUninstallRemovesFilter(t *testing.T) {
 	defer db.Close()
 
 	rec := pluginregistry.Record{
-		ID:           "gtk-ai/date",
-		Module:       "github.com/gtk-ai/date",
+		ID:           "prunesh/date",
+		Module:       "github.com/prunesh/date",
 		Version:      "v0.11.0",
 		Argv0:        "date",
 		Contract:     "subprocess/v1",
 		BinaryPath:   filepath.Join(home, "date"),
-		ManifestPath: filepath.Join(home, "gtkai.json"),
+		ManifestPath: filepath.Join(home, "prunesh.json"),
 		InstalledAt:  time.Now(),
 	}
 	if err := db.Install(rec); err != nil {
@@ -103,17 +103,17 @@ func TestUninstallPromotesPreviousActive(t *testing.T) {
 		Argv0:        "date",
 		Contract:     "subprocess/v1",
 		BinaryPath:   filepath.Join(home, "acme-date"),
-		ManifestPath: filepath.Join(home, "acme-gtkai.json"),
+		ManifestPath: filepath.Join(home, "acme-prunesh.json"),
 		InstalledAt:  time.Now().Add(-time.Hour),
 	}
 	newer := pluginregistry.Record{
-		ID:           "gtk-ai/date",
-		Module:       "github.com/gtk-ai/date",
+		ID:           "prunesh/date",
+		Module:       "github.com/prunesh/date",
 		Version:      "v0.11.0",
 		Argv0:        "date",
 		Contract:     "subprocess/v1",
 		BinaryPath:   filepath.Join(home, "date"),
-		ManifestPath: filepath.Join(home, "gtkai.json"),
+		ManifestPath: filepath.Join(home, "prunesh.json"),
 		InstalledAt:  time.Now(),
 	}
 	if err := db.Install(older); err != nil {

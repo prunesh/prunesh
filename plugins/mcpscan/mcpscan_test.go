@@ -65,7 +65,7 @@ func TestPassthroughSet(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Setenv("GTK_MCP_PASSTHROUGH_PATTERNS", tt.env)
+		t.Setenv("PRUNESH_MCP_PASSTHROUGH_PATTERNS", tt.env)
 		got := passthroughSet()
 		if len(got) != len(tt.want) {
 			t.Errorf("env=%q: got %v, want %v", tt.env, got, tt.want)

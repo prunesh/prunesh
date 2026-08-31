@@ -1,4 +1,4 @@
-module github.com/jmeiracorbal/gtk-ai
+module github.com/prunesh/prunesh
 
 go 1.26.1
 

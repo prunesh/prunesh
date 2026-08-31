@@ -1,6 +1,6 @@
 #!/bin/sh
-# gtk-ai installer
-# Usage: curl -sSL https://raw.githubusercontent.com/jmeiracorbal/gtk-ai/main/install.sh | sh
+# prunesh installer
+# Usage: curl -sSL https://raw.githubusercontent.com/prunesh/prunesh/main/install.sh | sh
 #
 # Agent selection (default: auto-detect installed compatible agents):
 #   sh -s -- --agent=auto
@@ -11,29 +11,29 @@
 #   sh -s -- --agent=all
 #
 # To skip binary install (configure agents only):
-#   GTKAI_CLAUDE_ONLY=1 sh install.sh
-#   GTKAI_SKIP_BINARY=1 sh install.sh -- --agent=cursor
+#   PRUNESH_CLAUDE_ONLY=1 sh install.sh
+#   PRUNESH_SKIP_BINARY=1 sh install.sh -- --agent=cursor
 #
 # Environment:
-#   GTKAI_AGENT=cursor
-#   GTKAI_SCRIPTS_DIR=/path/to/scripts
-#   GTKAI_INSTALL_DIR=$HOME/.local/bin
-#   GTKAI_DRY_RUN=true
+#   PRUNESH_AGENT=cursor
+#   PRUNESH_SCRIPTS_DIR=/path/to/scripts
+#   PRUNESH_INSTALL_DIR=$HOME/.local/bin
+#   PRUNESH_DRY_RUN=true
 
 set -e
 
-REPO="jmeiracorbal/gtk-ai"
-BINARY="gtkai"
-INSTALL_DIR="${GTKAI_INSTALL_DIR:-$HOME/.local/bin}"
-SKIP_BINARY="${GTKAI_SKIP_BINARY:-${GTKAI_CLAUDE_ONLY:-}}"
-DRY_RUN="${GTKAI_DRY_RUN:-false}"
-AGENT="${GTKAI_AGENT:-auto}"
-if [ -n "${GTKAI_CLAUDE_ONLY:-}" ] && [ -z "${GTKAI_AGENT:-}" ]; then
+REPO="prunesh/prunesh"
+BINARY="prunesh"
+INSTALL_DIR="${PRUNESH_INSTALL_DIR:-$HOME/.local/bin}"
+SKIP_BINARY="${PRUNESH_SKIP_BINARY:-${PRUNESH_CLAUDE_ONLY:-}}"
+DRY_RUN="${PRUNESH_DRY_RUN:-false}"
+AGENT="${PRUNESH_AGENT:-auto}"
+if [ -n "${PRUNESH_CLAUDE_ONLY:-}" ] && [ -z "${PRUNESH_AGENT:-}" ]; then
   AGENT=claudecode
 fi
 TMP_DIR=$(mktemp -d)
 TMP_ROOT=""
-GTKAI_BIN=""
+PRUNESH_BIN=""
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -50,7 +50,7 @@ header()  { printf "\n${BOLD}%s${RESET}\n" "$1"; }
 
 printf "${BOLD}"
 cat <<'EOF'
-   gtk-ai — rule-based output filtering for coding agents
+   prunesh — rule-based output filtering for coding agents
 EOF
 printf "${RESET}\n"
 
@@ -122,17 +122,17 @@ probe_url() {
 json_merge() {
   patch="$1"
   file="$2"
-  printf '%s' "$patch" | "$GTKAI_BIN" json-merge "$file"
+  printf '%s' "$patch" | "$PRUNESH_BIN" json-merge "$file"
 }
 
 append_marked_block() {
   dest="$1"
   src="$2"
-  start="<!-- gtk-ai:start -->"
-  end="<!-- gtk-ai:end -->"
+  start="<!-- prunesh:start -->"
+  end="<!-- prunesh:end -->"
   mkdir -p "$(dirname "$dest")"
   if [ -f "$dest" ] && grep -qF "$start" "$dest"; then
-    info "$dest — gtk-ai block already present"
+    info "$dest — prunesh block already present"
     return
   fi
   {
@@ -147,21 +147,21 @@ append_marked_block() {
 
 resolve_binary() {
   if [ -x "$INSTALL_DIR/$BINARY" ]; then
-    GTKAI_BIN="$INSTALL_DIR/$BINARY"
+    PRUNESH_BIN="$INSTALL_DIR/$BINARY"
     return
   fi
   if command -v "$BINARY" >/dev/null 2>&1; then
-    GTKAI_BIN=$(command -v "$BINARY")
+    PRUNESH_BIN=$(command -v "$BINARY")
     return
   fi
-  error "$BINARY not found. Install it first or unset GTKAI_SKIP_BINARY."
+  error "$BINARY not found. Install it first or unset PRUNESH_SKIP_BINARY."
 }
 
 if [ -n "$SKIP_BINARY" ]; then
-  header "Skipping binary install (GTKAI_SKIP_BINARY/GTKAI_CLAUDE_ONLY)"
+  header "Skipping binary install (PRUNESH_SKIP_BINARY/PRUNESH_CLAUDE_ONLY)"
   resolve_binary
-  INSTALLED_VERSION=$("$GTKAI_BIN" version | awk '{print $2}')
-  success "$BINARY $INSTALLED_VERSION found ($GTKAI_BIN)"
+  INSTALLED_VERSION=$("$PRUNESH_BIN" version | awk '{print $2}')
+  success "$BINARY $INSTALLED_VERSION found ($PRUNESH_BIN)"
 else
   header "Installing $BINARY"
 
@@ -185,10 +185,10 @@ else
       info "Verifying checksum..."
       EXPECTED=$(fetch_stdout "$CHECKSUM_URL" | awk '{print $1}')
       if [ -z "$EXPECTED" ]; then
-        if [ "${GTKAI_SKIP_CHECKSUM:-}" = "1" ]; then
-          warn "Could not fetch checksum — proceeding because GTKAI_SKIP_CHECKSUM=1"
+        if [ "${PRUNESH_SKIP_CHECKSUM:-}" = "1" ]; then
+          warn "Could not fetch checksum — proceeding because PRUNESH_SKIP_CHECKSUM=1"
         else
-          error "Could not fetch checksum. Set GTKAI_SKIP_CHECKSUM=1 to bypass."
+          error "Could not fetch checksum. Set PRUNESH_SKIP_CHECKSUM=1 to bypass."
         fi
       else
         if command -v shasum >/dev/null 2>&1; then
@@ -196,7 +196,7 @@ else
         elif command -v sha256sum >/dev/null 2>&1; then
           ACTUAL=$(sha256sum "$TMP_DIR/$BINARY" | awk '{print $1}')
         else
-          error "No SHA256 tool found (shasum/sha256sum). Set GTKAI_SKIP_CHECKSUM=1 to bypass."
+          error "No SHA256 tool found (shasum/sha256sum). Set PRUNESH_SKIP_CHECKSUM=1 to bypass."
         fi
 
         if [ "$ACTUAL" != "$EXPECTED" ]; then
@@ -216,26 +216,26 @@ else
       fi
 
       info "Cloning repository..."
-      git clone --depth 1 "https://github.com/$REPO.git" "$TMP_DIR/gtk-ai" >/dev/null 2>&1
+      git clone --depth 1 "https://github.com/$REPO.git" "$TMP_DIR/prunesh" >/dev/null 2>&1
 
       info "Building $BINARY..."
-      cd "$TMP_DIR/gtk-ai"
-      go build -o "$INSTALL_DIR/$BINARY" ./cmd/gtkai/
+      cd "$TMP_DIR/prunesh"
+      go build -o "$INSTALL_DIR/$BINARY" ./cmd/prunesh/
       cd - >/dev/null
       success "Built from source"
-      if [ -d "$TMP_DIR/gtk-ai/integrations/cursor/hooks" ]; then
-        TMP_ROOT="$TMP_DIR/gtk-ai"
+      if [ -d "$TMP_DIR/prunesh/integrations/cursor/hooks" ]; then
+        TMP_ROOT="$TMP_DIR/prunesh"
       fi
     fi
   fi
 
-  GTKAI_BIN="$INSTALL_DIR/$BINARY"
-  if ! "$GTKAI_BIN" version >/dev/null 2>&1; then
-    error "Binary installed but failed to run. Check $GTKAI_BIN"
+  PRUNESH_BIN="$INSTALL_DIR/$BINARY"
+  if ! "$PRUNESH_BIN" version >/dev/null 2>&1; then
+    error "Binary installed but failed to run. Check $PRUNESH_BIN"
   fi
 
-  INSTALLED_VERSION=$("$GTKAI_BIN" version | awk '{print $2}')
-  success "$BINARY $INSTALLED_VERSION installed to $GTKAI_BIN"
+  INSTALLED_VERSION=$("$PRUNESH_BIN" version | awk '{print $2}')
+  success "$BINARY $INSTALLED_VERSION installed to $PRUNESH_BIN"
 
   header "Configuring PATH"
 
@@ -243,7 +243,7 @@ else
     shell_rc="$1"
     if [ -f "$shell_rc" ]; then
       if ! grep -q "$INSTALL_DIR" "$shell_rc" 2>/dev/null; then
-        printf '\n# gtk-ai\nexport PATH="%s:$PATH"\n' "$INSTALL_DIR" >> "$shell_rc"
+        printf '\n# prunesh\nexport PATH="%s:$PATH"\n' "$INSTALL_DIR" >> "$shell_rc"
         success "Added $INSTALL_DIR to PATH in $shell_rc"
       else
         info "$INSTALL_DIR already in $shell_rc"
@@ -264,8 +264,8 @@ resolve_scripts() {
   if [ -n "$TMP_ROOT" ]; then
     return
   fi
-  if [ -n "${GTKAI_SCRIPTS_DIR:-}" ]; then
-    TMP_ROOT="$GTKAI_SCRIPTS_DIR"
+  if [ -n "${PRUNESH_SCRIPTS_DIR:-}" ]; then
+    TMP_ROOT="$PRUNESH_SCRIPTS_DIR"
     return
   fi
   if [ -f "$0" ] && [ -d "$(dirname "$0")/integrations/cursor/hooks" ]; then
@@ -274,8 +274,8 @@ resolve_scripts() {
   fi
 
   header "Fetching agent scripts"
-  archive_url="https://github.com/$REPO/releases/latest/download/gtkai-scripts.tar.gz"
-  checksum_url="https://github.com/$REPO/releases/latest/download/gtkai-scripts.tar.gz.sha256"
+  archive_url="https://github.com/$REPO/releases/latest/download/prunesh-scripts.tar.gz"
+  checksum_url="https://github.com/$REPO/releases/latest/download/prunesh-scripts.tar.gz.sha256"
   if probe_url "$archive_url"; then
     tmp_archive=$(mktemp)
     fetch "$archive_url" "$tmp_archive" || error "Scripts archive download failed"
@@ -299,21 +299,21 @@ resolve_scripts() {
   fi
 
   info "No scripts archive in the latest release — cloning repository"
-  git clone --depth 1 "https://github.com/$REPO.git" "$TMP_DIR/gtk-ai-scripts" >/dev/null 2>&1
-  TMP_ROOT="$TMP_DIR/gtk-ai-scripts"
+  git clone --depth 1 "https://github.com/$REPO.git" "$TMP_DIR/prunesh-scripts" >/dev/null 2>&1
+  TMP_ROOT="$TMP_DIR/prunesh-scripts"
 }
 
 install_skill_global() {
-  AGENTS_SKILL_DIR="$HOME/.agents/skills/gtk-ai"
+  AGENTS_SKILL_DIR="$HOME/.agents/skills/prunesh"
   mkdir -p "$AGENTS_SKILL_DIR"
-  cp "$TMP_ROOT/skills/gtk-ai/SKILL.md" "$AGENTS_SKILL_DIR/SKILL.md"
-  success "$HOME/.agents/skills/gtk-ai/SKILL.md written"
+  cp "$TMP_ROOT/skills/prunesh/SKILL.md" "$AGENTS_SKILL_DIR/SKILL.md"
+  success "$HOME/.agents/skills/prunesh/SKILL.md written"
 }
 
 install_skill_symlink() {
   link_dir="$1"
-  target="$HOME/.agents/skills/gtk-ai"
-  link="$link_dir/gtk-ai"
+  target="$HOME/.agents/skills/prunesh"
+  link="$link_dir/prunesh"
   mkdir -p "$link_dir"
   if [ -L "$link" ] || [ -e "$link" ]; then
     rm -f "$link"
@@ -329,7 +329,7 @@ setup_claudecode() {
   install_skill_symlink "$HOME/.claude/skills"
 
   printf "To activate the Claude plugin, run:\n\n"
-  printf "  ${BOLD}%s${RESET}\n\n" "claude plugin install -s user gtk-ai@gtk-ai"
+  printf "  ${BOLD}%s${RESET}\n\n" "claude plugin install -s user prunesh@prunesh"
   printf "Then restart Claude Code.\n"
 }
 
@@ -341,17 +341,17 @@ setup_cursor() {
   rules_dir="$HOME/.cursor/rules"
 
   mkdir -p "$hooks_dir" "$rules_dir"
-  cp "$TMP_ROOT/integrations/cursor/hooks/gtkai-pre-tool-use.sh" "$hooks_dir/"
-  cp "$TMP_ROOT/integrations/cursor/hooks/gtkai-post-tool-use.sh" "$hooks_dir/"
-  chmod +x "$hooks_dir/gtkai-pre-tool-use.sh" "$hooks_dir/gtkai-post-tool-use.sh"
+  cp "$TMP_ROOT/integrations/cursor/hooks/prunesh-pre-tool-use.sh" "$hooks_dir/"
+  cp "$TMP_ROOT/integrations/cursor/hooks/prunesh-post-tool-use.sh" "$hooks_dir/"
+  chmod +x "$hooks_dir/prunesh-pre-tool-use.sh" "$hooks_dir/prunesh-post-tool-use.sh"
   success "Hook scripts installed to ${hooks_dir}"
 
-  patch=$(printf '{"version":1,"hooks":{"preToolUse":[{"command":"%s/gtkai-pre-tool-use.sh","matcher":"Shell"}],"postToolUse":[{"command":"%s/gtkai-post-tool-use.sh","matcher":"MCP:.*"}]}}' "$hooks_dir" "$hooks_dir")
+  patch=$(printf '{"version":1,"hooks":{"preToolUse":[{"command":"%s/prunesh-pre-tool-use.sh","matcher":"Shell"}],"postToolUse":[{"command":"%s/prunesh-post-tool-use.sh","matcher":"MCP:.*"}]}}' "$hooks_dir" "$hooks_dir")
   result=$(json_merge "$patch" "$hooks_json")
   success "$HOME/.cursor/hooks.json — $result"
 
-  cp "$TMP_ROOT/integrations/cursor/rules/gtk-ai.mdc" "$rules_dir/gtk-ai.mdc"
-  success "$HOME/.cursor/rules/gtk-ai.mdc written"
+  cp "$TMP_ROOT/integrations/cursor/rules/prunesh.mdc" "$rules_dir/prunesh.mdc"
+  success "$HOME/.cursor/rules/prunesh.mdc written"
 
   install_skill_global
   install_skill_symlink "$HOME/.cursor/skills"
@@ -366,11 +366,11 @@ setup_codex() {
   agents_md="$HOME/.codex/AGENTS.md"
 
   mkdir -p "$hooks_dir"
-  cp "$TMP_ROOT/integrations/codex/hooks/gtkai-pre-tool-use.sh" "$hooks_dir/"
-  chmod +x "$hooks_dir/gtkai-pre-tool-use.sh"
+  cp "$TMP_ROOT/integrations/codex/hooks/prunesh-pre-tool-use.sh" "$hooks_dir/"
+  chmod +x "$hooks_dir/prunesh-pre-tool-use.sh"
   success "Hook scripts installed to ${hooks_dir}"
 
-  patch=$(printf '{"hooks":{"PreToolUse":[{"matcher":"Bash|shell|local_shell|container_exec|exec_command|shell_command","hooks":[{"type":"command","command":"%s/gtkai-pre-tool-use.sh","statusMessage":"gtkai rewrite","timeout":10}]}]}}' "$hooks_dir")
+  patch=$(printf '{"hooks":{"PreToolUse":[{"matcher":"Bash|shell|local_shell|container_exec|exec_command|shell_command","hooks":[{"type":"command","command":"%s/prunesh-pre-tool-use.sh","statusMessage":"prunesh rewrite","timeout":10}]}]}}' "$hooks_dir")
   result=$(json_merge "$patch" "$hooks_json")
   success "$HOME/.codex/hooks.json — $result"
 
@@ -408,7 +408,7 @@ setup_opencode() {
   agents_md="$HOME/.config/opencode/AGENTS.md"
 
   mkdir -p "$plugins_dir"
-  cp "$TMP_ROOT/integrations/opencode/plugins/gtkai.ts" "$plugins_dir/"
+  cp "$TMP_ROOT/integrations/opencode/plugins/prunesh.ts" "$plugins_dir/"
   success "Plugin installed to ${plugins_dir}"
 
   append_marked_block "$agents_md" "$TMP_ROOT/integrations/opencode/AGENTS.md"
@@ -504,5 +504,5 @@ warn_rtk
 rm -rf "$TMP_DIR"
 
 header "Done"
-success "gtk-ai $INSTALLED_VERSION configured for agent=${AGENT}"
+success "prunesh $INSTALLED_VERSION configured for agent=${AGENT}"
 printf "Restart the agent after installation.\n\n"

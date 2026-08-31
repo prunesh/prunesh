@@ -8,9 +8,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/registry"
-	"github.com/jmeiracorbal/gtk-ai/internal/text"
-	readmod "github.com/jmeiracorbal/gtk-ai/plugins/read"
+	"github.com/prunesh/prunesh/internal/registry"
+	"github.com/prunesh/prunesh/internal/text"
+	readmod "github.com/prunesh/prunesh/plugins/read"
 )
 
 // ── Input structures ──────────────────────────────────────────────────────────
@@ -65,7 +65,7 @@ type openCodePostOutput struct {
 const mcpMaxChars = 3000
 
 func passthroughPatterns() []string {
-	raw := os.Getenv("GTK_MCP_PASSTHROUGH_PATTERNS")
+	raw := os.Getenv("PRUNESH_MCP_PASSTHROUGH_PATTERNS")
 	if raw == "" {
 		return []string{}
 	}
@@ -172,7 +172,7 @@ func filterBashOutput(command, output string) (string, bool) {
 	if idx := strings.LastIndex(base, "/"); idx >= 0 {
 		base = base[idx+1:]
 	}
-	if base == "gtkai" {
+	if base == "prunesh" {
 		return output, false
 	}
 
@@ -204,7 +204,7 @@ func handleMCP(input hookInput, w io.Writer, agent Agent) (bool, error) {
 	for i, c := range contents {
 		if c.Type == "text" && len(c.Text) > mcpMaxChars {
 			contents[i].Text = c.Text[:mcpMaxChars] +
-				fmt.Sprintf("\n... [gtkai: truncated %d chars]", len(c.Text)-mcpMaxChars)
+				fmt.Sprintf("\n... [prunesh: truncated %d chars]", len(c.Text)-mcpMaxChars)
 			modified = true
 		}
 	}

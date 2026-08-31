@@ -4,8 +4,8 @@ package readcmd
 import (
 	"strings"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/registry"
-	readmod "github.com/jmeiracorbal/gtk-ai/plugins/read"
+	"github.com/prunesh/prunesh/internal/registry"
+	readmod "github.com/prunesh/prunesh/plugins/read"
 )
 
 func init() {

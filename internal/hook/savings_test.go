@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/hook"
-	"github.com/jmeiracorbal/gtk-ai/internal/registry"
+	"github.com/prunesh/prunesh/internal/hook"
+	"github.com/prunesh/prunesh/internal/registry"
 )
 
 // cursorMCPPayload builds a Cursor PostToolUse payload for an MCP tool.

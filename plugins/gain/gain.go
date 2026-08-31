@@ -1,5 +1,5 @@
 // Module gain: tracks and displays token savings analytics.
-// Stores records in ~/.gtk-ai/gain.db (SQLite).
+// Stores records in ~/.prunesh/gain.db (SQLite).
 package gain
 
 import (
@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/storage"
+	"github.com/prunesh/prunesh/internal/storage"
 	_ "modernc.org/sqlite"
 )
 
@@ -139,7 +139,7 @@ func PrintSummary(t *Tracker) error {
 	}
 
 	bar := progressBar(s.SavingsPct, 20)
-	fmt.Printf("gtk-ai Token Savings\n")
+	fmt.Printf("prunesh Token Savings\n")
 	fmt.Printf("════════════════════════════════════════\n")
 	fmt.Printf("Total commands: %d\n", s.TotalCommands)
 	fmt.Printf("Tokens in:      %s\n", fmtTokens(s.TokensIn))

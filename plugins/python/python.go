@@ -2,8 +2,8 @@
 package python
 
 import (
-	"github.com/jmeiracorbal/gtk-ai/internal/registry"
-	"github.com/jmeiracorbal/gtk-ai/plugins/pytest"
+	"github.com/prunesh/prunesh/internal/registry"
+	"github.com/prunesh/prunesh/plugins/pytest"
 )
 
 func init() {

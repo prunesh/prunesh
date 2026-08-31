@@ -2,7 +2,7 @@
 package npmtest
 
 import (
-	"github.com/jmeiracorbal/gtk-ai/internal/registry"
+	"github.com/prunesh/prunesh/internal/registry"
 )
 
 func init() {

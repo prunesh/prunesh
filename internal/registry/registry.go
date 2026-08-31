@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// Module is the interface every gtk-ai module must implement.
+// Module is the interface every prunesh module must implement.
 type Module interface {
 	// Name returns the command name this module handles (e.g. "find", "ls").
 	Name() string
@@ -41,7 +41,7 @@ var modules = map[string]Module{}
 func Register(m Module) {
 	name := strings.ToLower(m.Name())
 	if _, exists := modules[name]; exists {
-		panic(fmt.Sprintf("gtk-ai: module %q already registered", name))
+		panic(fmt.Sprintf("prunesh: module %q already registered", name))
 	}
 	modules[name] = m
 }

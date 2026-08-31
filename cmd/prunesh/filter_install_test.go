@@ -6,8 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/proxy"
-	"github.com/jmeiracorbal/gtk-ai/internal/testhome"
+	"github.com/prunesh/prunesh/internal/proxy"
+	"github.com/prunesh/prunesh/internal/testhome"
 )
 
 func captureProxyStdout(t *testing.T, fn func() int) string {

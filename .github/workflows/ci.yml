@@ -28,9 +28,9 @@ jobs:
 
       - name: Check version consistency
         run: |
-          go_ver=$(grep 'const version = ' cmd/gtkai/main.go | sed 's/.*"\([^"]*\)".*/\1/')
+          go_ver=$(grep 'const version = ' cmd/prunesh/main.go | sed 's/.*"\([^"]*\)".*/\1/')
           if [ -z "$go_ver" ]; then
-            echo "could not extract version from cmd/gtkai/main.go"
+            echo "could not extract version from cmd/prunesh/main.go"
             exit 1
           fi
           echo "canonical version: $go_ver"
@@ -68,11 +68,11 @@ jobs:
         run: |
           failed=0
           for f in \
-            integrations/claude/scripts/gtkai-post-tool-use.sh \
-            integrations/claude/scripts/gtkai-pre-tool-use.sh \
-            integrations/cursor/hooks/gtkai-pre-tool-use.sh \
-            integrations/cursor/hooks/gtkai-post-tool-use.sh \
-            integrations/codex/hooks/gtkai-pre-tool-use.sh
+            integrations/claude/scripts/prunesh-post-tool-use.sh \
+            integrations/claude/scripts/prunesh-pre-tool-use.sh \
+            integrations/cursor/hooks/prunesh-pre-tool-use.sh \
+            integrations/cursor/hooks/prunesh-post-tool-use.sh \
+            integrations/codex/hooks/prunesh-pre-tool-use.sh
           do
             mode=$(git ls-files -s "$f" | awk '{print $1}')
             if [ "$mode" != "100755" ]; then

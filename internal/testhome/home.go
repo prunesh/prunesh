@@ -1,4 +1,4 @@
-// Package testhome isolates HOME for tests that write ~/.gtk-ai without polluting t.TempDir with Go module cache.
+// Package testhome isolates HOME for tests that write ~/.prunesh without polluting t.TempDir with Go module cache.
 package testhome
 
 import (
@@ -11,11 +11,11 @@ import (
 // Isolated returns an isolated HOME and GOMODCACHE for filter install tests.
 func Isolated(t *testing.T) string {
 	t.Helper()
-	home, err := os.MkdirTemp("", "gtkai-test-home-*")
+	home, err := os.MkdirTemp("", "prunesh-test-home-*")
 	if err != nil {
 		t.Fatal(err)
 	}
-	modCache, err := os.MkdirTemp("", "gtkai-test-modcache-*")
+	modCache, err := os.MkdirTemp("", "prunesh-test-modcache-*")
 	if err != nil {
 		t.Fatal(err)
 	}

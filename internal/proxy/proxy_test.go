@@ -10,11 +10,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/proxy"
-	"github.com/jmeiracorbal/gtk-ai/plugins/gain"
+	"github.com/prunesh/prunesh/internal/proxy"
+	"github.com/prunesh/prunesh/plugins/gain"
 
-	_ "github.com/jmeiracorbal/gtk-ai/plugins/git"
-	_ "github.com/jmeiracorbal/gtk-ai/plugins/ls"
+	_ "github.com/prunesh/prunesh/plugins/git"
+	_ "github.com/prunesh/prunesh/plugins/ls"
 )
 
 func TestRunGitStatus(t *testing.T) {

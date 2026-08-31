@@ -19,20 +19,20 @@ jobs:
       - name: Verify tag matches code version
         run: |
           tag="${GITHUB_REF_NAME#v}"
-          go_ver=$(grep 'const version = ' cmd/gtkai/main.go | sed 's/.*"\([^"]*\)".*/\1/')
+          go_ver=$(grep 'const version = ' cmd/prunesh/main.go | sed 's/.*"\([^"]*\)".*/\1/')
           if [ -z "$go_ver" ]; then
-            echo "could not extract version from cmd/gtkai/main.go"
+            echo "could not extract version from cmd/prunesh/main.go"
             exit 1
           fi
           if [ "$tag" != "$go_ver" ]; then
-            echo "tag '$tag' does not match cmd/gtkai/main.go version '$go_ver'"
+            echo "tag '$tag' does not match cmd/prunesh/main.go version '$go_ver'"
             exit 1
           fi
           echo "tag matches code version: $go_ver"
 
       - name: Verify version consistency across files
         run: |
-          go_ver=$(grep 'const version = ' cmd/gtkai/main.go | sed 's/.*"\([^"]*\)".*/\1/')
+          go_ver=$(grep 'const version = ' cmd/prunesh/main.go | sed 's/.*"\([^"]*\)".*/\1/')
           failed=0
           check() {
             local label=$1 val=$2
@@ -65,24 +65,24 @@ jobs:
         run: |
           mkdir -p dist
 
-          # Names must match install.sh URL pattern: gtkai-{os}-{arch}
-          CGO_ENABLED=0 GOOS=linux   GOARCH=amd64 go build -ldflags="-s -w" -o dist/gtkai-linux-amd64   ./cmd/gtkai/
-          CGO_ENABLED=0 GOOS=linux   GOARCH=arm64 go build -ldflags="-s -w" -o dist/gtkai-linux-arm64   ./cmd/gtkai/
-          CGO_ENABLED=0 GOOS=darwin  GOARCH=amd64 go build -ldflags="-s -w" -o dist/gtkai-darwin-amd64  ./cmd/gtkai/
-          CGO_ENABLED=0 GOOS=darwin  GOARCH=arm64 go build -ldflags="-s -w" -o dist/gtkai-darwin-arm64  ./cmd/gtkai/
-          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/gtkai-windows-amd64.exe ./cmd/gtkai/
+          # Names must match install.sh URL pattern: prunesh-{os}-{arch}
+          CGO_ENABLED=0 GOOS=linux   GOARCH=amd64 go build -ldflags="-s -w" -o dist/prunesh-linux-amd64   ./cmd/prunesh/
+          CGO_ENABLED=0 GOOS=linux   GOARCH=arm64 go build -ldflags="-s -w" -o dist/prunesh-linux-arm64   ./cmd/prunesh/
+          CGO_ENABLED=0 GOOS=darwin  GOARCH=amd64 go build -ldflags="-s -w" -o dist/prunesh-darwin-amd64  ./cmd/prunesh/
+          CGO_ENABLED=0 GOOS=darwin  GOARCH=arm64 go build -ldflags="-s -w" -o dist/prunesh-darwin-arm64  ./cmd/prunesh/
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/prunesh-windows-amd64.exe ./cmd/prunesh/
 
           echo "Built:"
           ls -lh dist/
 
-          tar -czf dist/gtkai-scripts.tar.gz integrations/cursor integrations/codex integrations/opencode
-          (cd dist && shasum -a 256 gtkai-scripts.tar.gz > gtkai-scripts.tar.gz.sha256)
+          tar -czf dist/prunesh-scripts.tar.gz integrations/cursor integrations/codex integrations/opencode
+          (cd dist && shasum -a 256 prunesh-scripts.tar.gz > prunesh-scripts.tar.gz.sha256)
           echo "Packed scripts archive"
 
       - name: Generate SHA256 checksums
         run: |
           cd dist
-          for f in gtkai-linux-amd64 gtkai-linux-arm64 gtkai-darwin-amd64 gtkai-darwin-arm64 gtkai-windows-amd64.exe; do
+          for f in prunesh-linux-amd64 prunesh-linux-arm64 prunesh-darwin-amd64 prunesh-darwin-arm64 prunesh-windows-amd64.exe; do
             [ -f "$f" ] && shasum -a 256 "$f" > "${f}.sha256"
           done
 

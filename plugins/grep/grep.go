@@ -4,8 +4,8 @@ package grep
 import (
 	"strings"
 
-	"github.com/jmeiracorbal/gtk-ai/internal/matchgroup"
-	"github.com/jmeiracorbal/gtk-ai/internal/registry"
+	"github.com/prunesh/prunesh/internal/matchgroup"
+	"github.com/prunesh/prunesh/internal/registry"
 )
 
 func init() {

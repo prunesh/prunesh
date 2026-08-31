@@ -1,5 +1,5 @@
 // Tests de instalación.
-// Ejercitan install.sh con HOME y GTKAI_INSTALL_DIR apuntando a directorios
+// Ejercitan install.sh con HOME y PRUNESH_INSTALL_DIR apuntando a directorios
 // temporales, verificando que la detección de agentes, el flujo dry-run,
 // y la configuración de cada agente produzcan los archivos y entradas correctas.
 package main_test
@@ -38,14 +38,14 @@ func runInstall(t *testing.T, env []string, args ...string) (string, int) {
 
 // baseEnv construye un entorno mínimo para install.sh que:
 //   - apunta HOME a un directorio temporal
-//   - apunta GTKAI_INSTALL_DIR a un directorio temporal con el binario ya compilado
-//   - usa GTKAI_SKIP_BINARY=1 para no intentar descargar nada de la red
-//   - usa GTKAI_SCRIPTS_DIR apuntando a la raíz del repo local
+//   - apunta PRUNESH_INSTALL_DIR a un directorio temporal con el binario ya compilado
+//   - usa PRUNESH_SKIP_BINARY=1 para no intentar descargar nada de la red
+//   - usa PRUNESH_SCRIPTS_DIR apuntando a la raíz del repo local
 func baseEnv(t *testing.T, home, installDir string) []string {
 	t.Helper()
 	bin := buildBinary(t)
 	// copiar el binario compilado al directorio de instalación simulado
-	dst := filepath.Join(installDir, "gtkai")
+	dst := filepath.Join(installDir, "prunesh")
 	data, err := os.ReadFile(bin)
 	if err != nil {
 		t.Fatal(err)
@@ -55,10 +55,10 @@ func baseEnv(t *testing.T, home, installDir string) []string {
 	}
 	return []string{
 		"HOME=" + home,
-		"GTKAI_INSTALL_DIR=" + installDir,
-		"GTKAI_SKIP_BINARY=1",
-		"GTKAI_SKIP_FILTERS=1",
-		"GTKAI_SCRIPTS_DIR=" + moduleRoot(t),
+		"PRUNESH_INSTALL_DIR=" + installDir,
+		"PRUNESH_SKIP_BINARY=1",
+		"PRUNESH_SKIP_FILTERS=1",
+		"PRUNESH_SCRIPTS_DIR=" + moduleRoot(t),
 		"PATH=" + installDir + ":" + os.Getenv("PATH"),
 		"SHELL=/bin/sh",
 	}
@@ -67,7 +67,7 @@ func baseEnv(t *testing.T, home, installDir string) []string {
 func TestInstallDryRun(t *testing.T) {
 	home := t.TempDir()
 	installDir := t.TempDir()
-	env := append(baseEnv(t, home, installDir), "GTKAI_DRY_RUN=true", "GTKAI_AGENT=claudecode")
+	env := append(baseEnv(t, home, installDir), "PRUNESH_DRY_RUN=true", "PRUNESH_AGENT=claudecode")
 
 	out, code := runInstall(t, env)
 	if code != 0 {
@@ -92,24 +92,24 @@ func TestInstallClaudeCode(t *testing.T) {
 		t.Fatalf("claudecode install exit %d:\n%s", code, out)
 	}
 	// skill must be installed in the global store
-	skillPath := filepath.Join(home, ".agents", "skills", "gtk-ai", "SKILL.md")
+	skillPath := filepath.Join(home, ".agents", "skills", "prunesh", "SKILL.md")
 	if _, err := os.Stat(skillPath); err != nil {
 		t.Fatalf("SKILL.md not in global store: %v", err)
 	}
-	// ~/.claude/skills/gtk-ai must be a symlink pointing to the global store
-	linkPath := filepath.Join(home, ".claude", "skills", "gtk-ai")
+	// ~/.claude/skills/prunesh must be a symlink pointing to the global store
+	linkPath := filepath.Join(home, ".claude", "skills", "prunesh")
 	info, err := os.Lstat(linkPath)
 	if err != nil {
 		t.Fatalf("claude skill symlink not created: %v", err)
 	}
 	if info.Mode()&os.ModeSymlink == 0 {
-		t.Fatal("~/.claude/skills/gtk-ai is not a symlink")
+		t.Fatal("~/.claude/skills/prunesh is not a symlink")
 	}
 	target, err := os.Readlink(linkPath)
 	if err != nil {
 		t.Fatalf("readlink: %v", err)
 	}
-	expected := filepath.Join(home, ".agents", "skills", "gtk-ai")
+	expected := filepath.Join(home, ".agents", "skills", "prunesh")
 	if target != expected {
 		t.Fatalf("symlink target: got %q, want %q", target, expected)
 	}
@@ -126,7 +126,7 @@ func TestInstallCursor(t *testing.T) {
 	}
 	// scripts de hooks deben estar instalados
 	hooksDir := filepath.Join(home, ".cursor", "hooks")
-	for _, script := range []string{"gtkai-pre-tool-use.sh", "gtkai-post-tool-use.sh"} {
+	for _, script := range []string{"prunesh-pre-tool-use.sh", "prunesh-post-tool-use.sh"} {
 		p := filepath.Join(hooksDir, script)
 		info, err := os.Stat(p)
 		if err != nil {
@@ -141,27 +141,27 @@ func TestInstallCursor(t *testing.T) {
 	if err != nil {
 		t.Fatalf("hooks.json not created: %v", err)
 	}
-	if !strings.Contains(string(hooksJSON), "gtkai-pre-tool-use.sh") {
+	if !strings.Contains(string(hooksJSON), "prunesh-pre-tool-use.sh") {
 		t.Fatalf("hooks.json does not register preToolUse hook:\n%s", hooksJSON)
 	}
 	// regla de contexto
-	if _, err := os.Stat(filepath.Join(home, ".cursor", "rules", "gtk-ai.mdc")); err != nil {
-		t.Fatalf("gtk-ai.mdc rule not installed: %v", err)
+	if _, err := os.Stat(filepath.Join(home, ".cursor", "rules", "prunesh.mdc")); err != nil {
+		t.Fatalf("prunesh.mdc rule not installed: %v", err)
 	}
 	// skill symlink
-	linkPath := filepath.Join(home, ".cursor", "skills", "gtk-ai")
+	linkPath := filepath.Join(home, ".cursor", "skills", "prunesh")
 	info, err := os.Lstat(linkPath)
 	if err != nil {
 		t.Fatalf("cursor skill symlink not created: %v", err)
 	}
 	if info.Mode()&os.ModeSymlink == 0 {
-		t.Fatal("~/.cursor/skills/gtk-ai is not a symlink")
+		t.Fatal("~/.cursor/skills/prunesh is not a symlink")
 	}
 	target, err := os.Readlink(linkPath)
 	if err != nil {
 		t.Fatalf("readlink cursor skill: %v", err)
 	}
-	if target != filepath.Join(home, ".agents", "skills", "gtk-ai") {
+	if target != filepath.Join(home, ".agents", "skills", "prunesh") {
 		t.Fatalf("cursor skill symlink target: got %q", target)
 	}
 }
@@ -176,7 +176,7 @@ func TestInstallCodex(t *testing.T) {
 		t.Fatalf("codex install exit %d:\n%s", code, out)
 	}
 	// hook pre-tool-use debe estar instalado
-	hookPath := filepath.Join(home, ".codex", "hooks", "gtkai-pre-tool-use.sh")
+	hookPath := filepath.Join(home, ".codex", "hooks", "prunesh-pre-tool-use.sh")
 	info, err := os.Stat(hookPath)
 	if err != nil {
 		t.Fatalf("codex hook not installed: %v", err)
@@ -198,19 +198,19 @@ func TestInstallCodex(t *testing.T) {
 		t.Fatalf("config.toml must not contain legacy codex_hooks:\n%s", configTOML)
 	}
 	// skill symlink
-	linkPath := filepath.Join(home, ".codex", "skills", "gtk-ai")
+	linkPath := filepath.Join(home, ".codex", "skills", "prunesh")
 	info, err = os.Lstat(linkPath)
 	if err != nil {
 		t.Fatalf("codex skill symlink not created: %v", err)
 	}
 	if info.Mode()&os.ModeSymlink == 0 {
-		t.Fatal("~/.codex/skills/gtk-ai is not a symlink")
+		t.Fatal("~/.codex/skills/prunesh is not a symlink")
 	}
 	target, err := os.Readlink(linkPath)
 	if err != nil {
 		t.Fatalf("readlink codex skill: %v", err)
 	}
-	if target != filepath.Join(home, ".agents", "skills", "gtk-ai") {
+	if target != filepath.Join(home, ".agents", "skills", "prunesh") {
 		t.Fatalf("codex skill symlink target: got %q", target)
 	}
 }
@@ -225,7 +225,7 @@ func TestInstallOpenCode(t *testing.T) {
 		t.Fatalf("opencode install exit %d:\n%s", code, out)
 	}
 	// plugin ts debe estar instalado
-	pluginPath := filepath.Join(home, ".config", "opencode", "plugins", "gtkai.ts")
+	pluginPath := filepath.Join(home, ".config", "opencode", "plugins", "prunesh.ts")
 	if _, err := os.Stat(pluginPath); err != nil {
 		t.Fatalf("opencode plugin not installed: %v", err)
 	}
@@ -255,12 +255,12 @@ func TestInstallIdempotentClaudeCode(t *testing.T) {
 			t.Fatalf("run %d exit %d:\n%s", i+1, code, out)
 		}
 	}
-	linkPath := filepath.Join(home, ".claude", "skills", "gtk-ai")
+	linkPath := filepath.Join(home, ".claude", "skills", "prunesh")
 	target, err := os.Readlink(linkPath)
 	if err != nil {
 		t.Fatalf("readlink after 2 runs: %v", err)
 	}
-	expected := filepath.Join(home, ".agents", "skills", "gtk-ai")
+	expected := filepath.Join(home, ".agents", "skills", "prunesh")
 	if target != expected {
 		t.Fatalf("symlink target after 2 runs: got %q, want %q", target, expected)
 	}
