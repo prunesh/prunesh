@@ -1,11 +1,14 @@
 package pluginregistry_test
 
 import (
+	"database/sql"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/prunesh/prunesh/internal/pluginregistry"
+	_ "modernc.org/sqlite"
 )
 
 func TestInstallAndActive(t *testing.T) {
@@ -36,14 +39,14 @@ func TestInstallAndActive(t *testing.T) {
 		t.Fatal(err)
 	}
 	if active == nil || active.ID != rec.ID {
-		t.Fatalf("active filter: %+v", active)
+		t.Fatalf("active plugin: %+v", active)
 	}
 	got, err := db.Get(rec.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if got == nil || got.ID != rec.ID {
-		t.Fatalf("get filter: %+v", got)
+		t.Fatalf("get plugin: %+v", got)
 	}
 }
 
@@ -82,7 +85,7 @@ func TestUninstallRemovesFilter(t *testing.T) {
 		t.Fatal(err)
 	}
 	if active != nil {
-		t.Fatalf("expected no active filter, got %+v", active)
+		t.Fatalf("expected no active plugin, got %+v", active)
 	}
 }
 
@@ -130,7 +133,7 @@ func TestUninstallPromotesPreviousActive(t *testing.T) {
 		t.Fatal(err)
 	}
 	if active == nil || active.ID != older.ID {
-		t.Fatalf("active filter: %+v", active)
+		t.Fatalf("active plugin: %+v", active)
 	}
 }
 
@@ -145,6 +148,48 @@ func TestUninstallMissing(t *testing.T) {
 	defer db.Close()
 
 	if _, err := db.Uninstall("missing/date"); err == nil {
-		t.Fatal("expected error for missing filter")
+		t.Fatal("expected error for missing plugin")
+	}
+}
+
+func TestMigrateFromFiltersTable(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	// Build a pre-migration DB that only has the old `filters` table.
+	dbDir := filepath.Join(home, ".prunesh")
+	if err := os.MkdirAll(dbDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	legacyDB, err := sql.Open("sqlite", filepath.Join(dbDir, "plugins.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = legacyDB.Exec(`
+		CREATE TABLE filters (
+			id TEXT PRIMARY KEY, module TEXT NOT NULL, version TEXT NOT NULL,
+			argv0 TEXT NOT NULL, contract TEXT NOT NULL,
+			binary_path TEXT NOT NULL, manifest_path TEXT NOT NULL,
+			installed_at INTEGER NOT NULL
+		);
+		INSERT INTO filters VALUES ('prunesh/date','github.com/prunesh/date','v0.1.0','date','stdin/v1','/tmp/date','/tmp/prunesh.json',1000);
+	`)
+	legacyDB.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	db, err := pluginregistry.Open()
+	if err != nil {
+		t.Fatalf("Open after legacy seed: %v", err)
+	}
+	defer db.Close()
+
+	recs, err := db.List()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(recs) != 1 || recs[0].ID != "prunesh/date" {
+		t.Fatalf("expected 1 migrated plugin, got %+v", recs)
 	}
 }

@@ -135,7 +135,7 @@ prunesh plugin uninstall prunesh/date
 | `plugin install <module@version>` | Download, validate `prunesh.json` contract, build, register in `~/.prunesh/plugins.db` |
 | `plugin install … --replace` | Required when another plugin is already active for the same command |
 | `plugin list` | List installed plugins; marks the active one per command |
-| `plugin uninstall <id>` | Remove by full id (e.g. `prunesh/date`); deletes `~/.prunesh/filters/<id>/` |
+| `plugin uninstall <id>` | Remove by full id (e.g. `prunesh/date`); deletes `~/.prunesh/plugins/<id>/` |
 
 **Conflict policy:** if plugin `acme/date` is active for `date`, installing `prunesh/date` aborts unless you pass `--replace`. With `--replace`, the new plugin becomes active; the previous one stays installed but inactive. To remove it: `plugin uninstall acme/date`. To switch back: reinstall with `--replace`.
 

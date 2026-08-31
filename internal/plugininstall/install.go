@@ -275,7 +275,7 @@ func installDir(id string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(base, "filters", id), nil
+	return filepath.Join(base, "plugins", id), nil
 }
 
 func copyFile(src, dst string, mode os.FileMode) error {
