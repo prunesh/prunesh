@@ -1,7 +1,7 @@
 # prunesh
 
 ![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat&logo=go&logoColor=white)
-![Version](https://img.shields.io/badge/version-0.12.0-blue?style=flat)
+![Version](https://img.shields.io/badge/version-0.13.0-blue?style=flat)
 ![License](https://img.shields.io/badge/license-Apache%202.0-blue?style=flat)
 ![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-blueviolet?style=flat)
 ![Cursor](https://img.shields.io/badge/Cursor-hooks-000000?style=flat)
