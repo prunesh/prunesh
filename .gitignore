@@ -2,9 +2,7 @@ dist/
 /gtkai
 /gtk
 *.exe
-~/.gtk-ai/
 
 .claude/
-.hybrid-coco/
 .gtkai
 .codegraph

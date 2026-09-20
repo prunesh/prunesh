@@ -84,7 +84,7 @@ go build -o ~/.local/bin/prunesh ./cmd/prunesh/
 Then configure agents without reinstalling the binary:
 
 ```bash
-GTKAI_SKIP_BINARY=1 sh install.sh -- --agent=all
+PRUNESH_SKIP_BINARY=1 sh install.sh -- --agent=all
 ```
 
 ### Agent surfaces
@@ -117,6 +117,12 @@ Each module handles one command. All built-in modules ship with the binary.
 | `grep` / `rg` | `grep`, `rg` | Shared grouping by file with per-file and total caps; `grep` injects `-nH` |
 | `cat` / `head` / `tail` | same | Reuses `read.FilterContent` on single-file output |
 | `tree` | `tree` | Entry count + capped listing |
+| `cargo` | `cargo` | Strips dependency resolution and progress bars from test/build/clippy/check |
+| `docker` | `docker` | Filters read-only subcommands (ps, images, inspect); strips layer noise |
+| `go` | `go` | Strips verbose output from test/build/vet; passes JSON test output through |
+| `npm` / `pnpm` / `npx` | `npm`, `pnpm`, `npx` | Summarizes test runner output; passes through non-test subcommands unchanged |
+| `pytest` | `pytest` | Strips PASSED lines; preserves failures and summary |
+| `python` / `python3` | `python`, `python3` | Delegates `-m pytest` invocations to the pytest filter |
 | `gain` | — | SQLite analytics: recorded on each proxy run |
 
 ## Marketplace plugins
@@ -181,24 +187,33 @@ _ "github.com/prunesh/prunesh/plugins/mycommand"
 By default, prunesh truncates all `mcp__*` tool responses above 3,000 chars. To exempt specific tools:
 
 ```sh
-export GTK_MCP_PASSTHROUGH_PATTERNS="my_tool_*,other_tool"
+export PRUNESH_MCP_PASSTHROUGH_PATTERNS="my_tool_*,other_tool"
 ```
 
 Pattern syntax: exact name or glob prefix (`prefix_*`).
 
+## Environment variables
+
+| Variable | Effect |
+|---|---|
+| `PRUNESH_MCP_PASSTHROUGH_PATTERNS` | Comma-separated MCP tool names or glob prefixes to skip filtering |
+| `PRUNESH_NO_UPDATE_CHECK` | Set to any value to disable automatic update notices |
+
 ## Commands
 
 ```text
-prunesh hook-pre --agent=<agent>   PreToolUse handler — rewrites shell commands to prunesh
-prunesh hook-post --agent=<agent>  PostToolUse handler — filters Read and MCP
-prunesh json-merge <file>          Deep-merge JSON from stdin into an agent config file
-prunesh <module> [args...]         Proxy: run a registered command through prunesh
-prunesh mcp-scan                   List MCP server tools, suggest passthrough prefixes
-prunesh gain                       Token savings analytics
+prunesh init                             Activate prunesh in the current project (writes .prunesh)
+prunesh hook-pre --agent=<agent>         PreToolUse handler — rewrites shell commands to prunesh
+prunesh hook-post --agent=<agent>        PostToolUse handler — filters Read and MCP
+prunesh json-merge <file>                Deep-merge JSON from stdin into an agent config file
+prunesh <module> [args...]               Proxy: run a registered command through prunesh
+prunesh mcp-scan                         List MCP server tools, suggest passthrough prefixes
+prunesh gain                             Token savings analytics
 prunesh plugin install <mod@ver> [--replace]  Install an external plugin
-prunesh plugin uninstall <id>      Remove an installed plugin by full id
-prunesh plugin list                List installed plugins (active marked)
-prunesh version                    Print version
+prunesh plugin uninstall <id>            Remove an installed plugin by full id
+prunesh plugin list                      List installed plugins (active marked)
+prunesh update [--check] [--yes]         Check for and install updates
+prunesh version                          Print version
 ```
 
 ## Architecture
@@ -214,6 +229,9 @@ prunesh/
 │   ├── text/               # ANSI strip
 │   ├── jsonmerge/          # installer config merge
 │   ├── hook/               # PreToolUse and PostToolUse handlers
+│   ├── projectmarker/      # .prunesh marker read/write (prunesh init)
+│   ├── storage/            # resolves ~/.prunesh data directory
+│   ├── updatecheck/        # periodic update detection and notice
 │   ├── pluginregistry/     # SQLite DB for installed plugins
 │   ├── pluginsubprocess/   # stdin/v1 protocol adapter
 │   ├── plugininstall/      # download, validate, install plugin binaries
