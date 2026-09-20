@@ -1,21 +1,69 @@
-# prunesh
+<p align="center">
+  <strong>Token reduction for AI coding agents.</strong><br>
+  Intercepts shell commands, filters their output, and keeps the context window lean.
+</p>
 
-![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat&logo=go&logoColor=white)
-![Version](https://img.shields.io/badge/version-0.13.0-blue?style=flat)
-![License](https://img.shields.io/badge/license-Apache%202.0-blue?style=flat)
-![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-blueviolet?style=flat)
-![Cursor](https://img.shields.io/badge/Cursor-hooks-000000?style=flat)
-![Codex](https://img.shields.io/badge/Codex-hooks-412991?style=flat)
-![OpenCode](https://img.shields.io/badge/OpenCode-plugin-6D28D9?style=flat)
+<p align="center">
+  <a href="#quick-start">Quick Start</a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#benchmark">Benchmark</a> ·
+  <a href="#installation">Installation</a> ·
+  <a href="#built-in-modules">Modules</a> ·
+  <a href="#commands">Commands</a> ·
+  <a href="ROADMAP.md">Roadmap</a>
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache%202.0-0f1f38?labelColor=e2eaf2&color=0f1f38"></a>
+  <img alt="Version" src="https://img.shields.io/badge/version-0.13.0-0f1f38?labelColor=e2eaf2&color=0f1f38">
+  <a href="https://go.dev"><img alt="Go" src="https://img.shields.io/badge/go-1.22+-0f1f38?labelColor=e2eaf2&color=0f1f38"></a>
+  <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux-0f1f38?labelColor=e2eaf2&color=0f1f38">
+</p>
+
+<p align="center">
+  <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-supported-0f1f38?labelColor=e2eaf2&color=0f1f38">
+  <img alt="Cursor" src="https://img.shields.io/badge/Cursor-supported-0f1f38?labelColor=e2eaf2&color=0f1f38">
+  <img alt="Codex" src="https://img.shields.io/badge/Codex-supported-0f1f38?labelColor=e2eaf2&color=0f1f38">
+  <img alt="OpenCode" src="https://img.shields.io/badge/OpenCode-supported-0f1f38?labelColor=e2eaf2&color=0f1f38">
+</p>
+
+---
 
 > *Podar es eliminar lo que sobra para que lo esencial crezca más fuerte.*
 
-`prunesh` reduces token usage from coding agents by intercepting shell commands and filtering their output before it reaches the model.
+## Why prunesh?
 
-Two parts:
+Agents waste tokens on noise: full `git log` histories, verbose `find` trees, progress bars, comment-heavy files. That noise fills the context window and drives up cost.
 
-- the `prunesh` Go binary: rewrites commands before they run and filters stdout
-- per-agent integrations: register `PreToolUse` / `PostToolUse` hooks and invoke `prunesh`
+| Without prunesh | With prunesh |
+|---|---|
+| `git log` dumps 80 commits verbatim | Compact: 80 commits → 244 tokens (−87%) |
+| `find` returns 150 raw paths | Grouped by directory, capped, extension summary |
+| `Read` includes every inline comment | Comment lines stripped; structure preserved |
+| Savings are invisible | Recorded and queryable with `prunesh gain` |
+
+prunesh does not parse semantics. It applies deterministic, heuristic rules: truncation, grouping, extension summaries, comment stripping.
+
+## Quick Start
+
+```bash
+# 1. Install
+curl -sSL https://raw.githubusercontent.com/prunesh/prunesh/main/install.sh | sh
+
+# 2. Activate in a project
+cd your-project
+prunesh init
+
+# 3. Install the Claude Code plugin
+claude plugin install -s user prunesh@prunesh
+
+# 4. Check savings
+prunesh gain
+```
+
+Then restart the agent. Hooks register automatically — prunesh intercepts commands from that session onward.
+
+## How it works
 
 ```text
 Agent → Shell("git status")
@@ -27,11 +75,18 @@ Agent → Shell("git status")
          Agent receives filtered output
 ```
 
+Two parts:
+
+- **`prunesh` binary** — rewrites commands before they run and filters stdout
+- **Per-agent integrations** — register `PreToolUse` / `PostToolUse` hooks and invoke `prunesh`
+
+prunesh activates only in projects with a `.prunesh` marker at the root. Hooks run everywhere but silently pass through any project without it.
+
 ## Benchmark
 
 Numbers from `go test ./internal/hook/... -v`. Token estimate: ~4 chars/token.
 
-| Input | Tokens before | Tokens after | Savings |
+| Input | Before | After | Savings |
 |---|---:|---:|---:|
 | `find`: 150 paths | 1,050 | 374 | **64%** |
 | `ls`: 70 entries | 262 | 65 | **75%** |
@@ -46,24 +101,22 @@ Savings grow with output size. Small outputs may not be reduced.
 
 ## Installation
 
-Installs the `prunesh` binary and configures hooks for every compatible agent found on the machine. Run once per machine.
-
-### Option A: install script
-
 ```bash
 curl -sSL https://raw.githubusercontent.com/prunesh/prunesh/main/install.sh | sh
 ```
 
-Explicit targets:
+Installs the `prunesh` binary and configures hooks for every compatible agent found on the machine.
 
-```bash
-curl -sSL https://raw.githubusercontent.com/prunesh/prunesh/main/install.sh | sh -s -- --agent=cursor
-curl -sSL https://raw.githubusercontent.com/prunesh/prunesh/main/install.sh | sh -s -- --agent=codex
-curl -sSL https://raw.githubusercontent.com/prunesh/prunesh/main/install.sh | sh -s -- --agent=opencode
-curl -sSL https://raw.githubusercontent.com/prunesh/prunesh/main/install.sh | sh -s -- --agent=all
-```
+| Option | Command |
+|---|---|
+| All agents | `sh -s -- --agent=all` |
+| Cursor only | `sh -s -- --agent=cursor` |
+| Codex only | `sh -s -- --agent=codex` |
+| OpenCode only | `sh -s -- --agent=opencode` |
+| From source | `go build -o ~/.local/bin/prunesh ./cmd/prunesh/` |
+| Skip binary reinstall | `PRUNESH_SKIP_BINARY=1 sh install.sh -- --agent=all` |
 
-Claude Code still needs the plugin installed:
+Claude Code uses a plugin instead of the install script:
 
 ```bash
 claude plugin install -s user prunesh@prunesh
@@ -71,43 +124,27 @@ claude plugin install -s user prunesh@prunesh
 
 Then restart the agent.
 
-### Option B: build from source
-
-Requires Go 1.22+.
-
-```bash
-git clone https://github.com/prunesh/prunesh
-cd prunesh
-go build -o ~/.local/bin/prunesh ./cmd/prunesh/
-```
-
-Then configure agents without reinstalling the binary:
-
-```bash
-PRUNESH_SKIP_BINARY=1 sh install.sh -- --agent=all
-```
-
-### Agent surfaces
+## Agent surfaces
 
 | | Claude Code | Cursor | Codex | OpenCode |
 |---|---|---|---|---|
 | **Hooks** | plugin `PreToolUse` / `PostToolUse` | `~/.cursor/hooks/` | `~/.codex/hooks/` | `~/.config/opencode/plugins/prunesh.ts` |
-| **Shell rewrite** | matcher `Bash` | matcher `Shell` | matcher `Bash` and shell aliases | `tool.execute.before` |
+| **Shell rewrite** | matcher `Bash` | matcher `Shell` | matcher `Bash` + shell aliases | `tool.execute.before` |
 | **Read / MCP post** | yes | MCP only | shell rewrite only | `read` and MCP tools |
 
 ## Project activation
 
-Once installed, prunesh must be activated per project. Run once at the repo root:
+Run once at the repo root:
 
 ```bash
 prunesh init
 ```
 
-This writes an empty `.prunesh` marker at the git root. Hooks silently skip any project without the marker — prunesh never activates where you did not opt in.
+Writes a `.prunesh` marker at the git root. Hooks silently skip any project without the marker — prunesh never activates where you did not opt in.
 
 ## Built-in modules
 
-Each module handles one command. All built-in modules ship with the binary.
+All built-in modules ship with the binary.
 
 | Module | Command | What it does |
 |---|---|---|
@@ -143,13 +180,15 @@ prunesh plugin uninstall prunesh/date
 | `plugin list` | List installed plugins; marks the active one per command |
 | `plugin uninstall <id>` | Remove by full id (e.g. `prunesh/date`); deletes `~/.prunesh/plugins/<id>/` |
 
-**Conflict policy:** if plugin `acme/date` is active for `date`, installing `prunesh/date` aborts unless you pass `--replace`. With `--replace`, the new plugin becomes active; the previous one stays installed but inactive. To remove it: `plugin uninstall acme/date`. To switch back: reinstall with `--replace`.
+**Conflict policy:** if `acme/date` is active for `date`, installing `prunesh/date` aborts unless you pass `--replace`. With `--replace`, the new plugin becomes active; the previous one stays installed but inactive. To switch back: reinstall with `--replace`.
 
-Uninstalling the active plugin promotes the most recently installed survivor for that command, or falls back to the built-in module when one exists.
+Uninstalling the active plugin promotes the most recently installed survivor, or falls back to the built-in module when one exists.
 
-### stdin/v1 protocol
+### Writing a plugin
 
-External plugins use contract `stdin/v1`: prunesh runs the plugin binary and exchanges JSON on stdin/stdout (`rewrite` + `filter_output`). Any language works as long as the binary implements the protocol. See [ARCHITECTURE.md](ARCHITECTURE.md) and the reference plugin [prunesh/date](https://github.com/prunesh/date).
+External plugins use contract `stdin/v1`: prunesh runs the plugin binary and exchanges JSON on stdin/stdout. Any language works as long as the binary implements the protocol.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) and the reference plugin [prunesh/date](https://github.com/prunesh/date).
 
 ## Adding a built-in module
 
@@ -168,13 +207,9 @@ func init() { registry.Register(&Module{}) }
 type Module struct{}
 
 func (m *Module) Name() string { return "mycommand" }
-
 func (m *Module) Rewrite(args []string) ([]string, bool) { return nil, false }
-
 func (m *Module) FilterOutput(args []string, output string, exitCode int) string { return output }
-
 func (m *Module) TokensBefore(output string) int { return registry.EstimateTokens(output) }
-
 func (m *Module) TokensAfter(filtered string) int { return registry.EstimateTokens(filtered) }
 ```
 
@@ -246,44 +281,21 @@ prunesh/
 
 The `registry` package is the only shared dependency between modules. Modules never import each other.
 
+## Design principles
+
+- **Deterministic** — same input always produces the same output; no model calls, no caching
+- **Opt-in by project** — global hooks are inert without `.prunesh`
+- **Heuristic, not semantic** — truncation and grouping rules, not intelligent compression
+- **Measurable** — `prunesh gain` shows exactly what was saved and why
+
 ## Known issues
 
 ### Codex: PreToolUse hook shows "New hook — review required"
 
-When the `PreToolUse` hook is added to `~/.codex/hooks.json` for the first time, Codex CLI requires an explicit trust review before running it. This is expected — it is a security feature of Codex, not a bug in prunesh.
+When the `PreToolUse` hook is added to `~/.codex/hooks.json` for the first time, Codex CLI requires an explicit trust review before running it. This is expected — it is a security feature of Codex.
 
-**Symptom**
-
-```
-PreToolUse hooks
-1 hook needs review before it can run.
-
-[!] Hook 1 · new
-
-Event     PreToolUse
-Matcher   Bash|shell|local_shell|container_exec|exec_command|shell_command
-Source    User config - ~/.codex/hooks.json
-Command   ~/.codex/hooks/prunesh-pre-tool-use.sh
-Trust     New hook - review required
-```
-
-**Why it happens**
-
-Codex stores a SHA-256 hash of each approved hook command in `~/.codex/config.toml` under `[hooks.state]`. A hook without a recorded hash is treated as untrusted and blocked until the user approves it.
-
-**Fix**
-
-Start a Codex session normally. When the review prompt appears, approve the hook (press `a` or follow the on-screen prompt). Codex writes the hash to `config.toml` and the hook runs on all subsequent sessions without interruption.
-
-After approval, `config.toml` will contain an entry like:
-
-```toml
-[hooks.state."/Users/<you>/.codex/hooks.json:pre_tool_use:0:0"]
-trusted_hash = "sha256:<hash>"
-```
-
-The `SessionStart` and `Stop` hooks follow the same flow and must be approved once each if they were not already trusted.
+**Fix:** start a Codex session normally. When the review prompt appears, approve the hook (press `a`). Codex writes the hash to `config.toml` and the hook runs on all subsequent sessions without interruption.
 
 ## License
 
-Apache 2.0, see [LICENSE](LICENSE). Attribution required on redistribution.
+[Apache 2.0](LICENSE): use, modify and distribute freely; retain the copyright notice and include attribution on redistribution.

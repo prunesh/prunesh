@@ -20,13 +20,29 @@ When changing the version, update every file that exposes it:
 - `plugins/mcpscan/mcpscan.go`
 - `README.md`
 
-To check no old references remain:
+To verify all six files are consistent before tagging:
 
 ```bash
 grep -rn "X.Y.Z" . --include="*.go" --include="*.json" --include="*.md"
 ```
 
-The git tag must match the version in code. The release CI workflow enforces this.
+**The tag must be created after the version bump commit is on `main`.** The `release.yml` `version-check` job enforces this: if the tag is `vX.Y.Z` but any of the six files still says an old version, the release fails immediately.
+
+**Never tag before bumping.** The correct order is always:
+
+1. Bump version in all six files.
+2. Commit and push to `main`.
+3. Create and push the tag.
+
+If you created the tag before bumping (tag points to an unbumped commit), move it:
+
+```bash
+git tag -d vX.Y.Z                   # delete local tag
+git push origin --delete vX.Y.Z     # delete remote tag
+# … bump version, commit, push …
+git tag vX.Y.Z                      # re-create on the new commit
+git push origin vX.Y.Z
+```
 
 ## Language
 
@@ -191,10 +207,19 @@ After merging a PR:
 
 1. Switch to `main` locally and pull.
 2. Run `go test ./...` — or the test most relevant to the change.
-   - If a gap appears: open a new branch, fix it, push and open a PR.
+   - If tests fail: open a new branch, fix, push and open a PR before continuing.
 3. If all green: bump the version in every file listed under **Versions**.
 4. Update documentation if the change affects user-facing behavior.
-5. Push a new git tag matching the version (`git tag vX.Y.Z && git push origin vX.Y.Z`).
+5. Commit the version bump: `git commit -m "chore: bump version to X.Y.Z"`.
+6. Push to `main`: `git push origin main`.
+7. Only after the push is on `main`: create and push the tag.
+
+```bash
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+
+The release workflow triggers on the tag push and builds the GitHub Release automatically.
 
 ## Before committing
 
