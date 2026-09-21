@@ -22,7 +22,7 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache%202.0-6e6255?labelColor=ebe3d7&color=6e6255"></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-0.14.1-6e6255?labelColor=ebe3d7&color=6e6255">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.15.0-6e6255?labelColor=ebe3d7&color=6e6255">
   <a href="https://go.dev"><img alt="Go" src="https://img.shields.io/badge/go-1.22+-6e6255?labelColor=ebe3d7&color=6e6255"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux-6e6255?labelColor=ebe3d7&color=6e6255">
 </p>
@@ -167,16 +167,10 @@ Discover and install external plugins from the [prunesh marketplace](https://pru
 
 ```bash
 # Install latest from the marketplace
-prunesh plugin install prunesh/date
-
-# Install a specific version from the marketplace
-prunesh plugin install prunesh/date@v0.3.0
-
-# Install directly from a Go module (bypasses the marketplace)
 prunesh plugin install github.com/prunesh/prunesh-date@v0.3.0
 
 # Install with replace (when another plugin already handles the same command)
-prunesh plugin install prunesh/date --replace
+prunesh plugin install github.com/prunesh/prunesh-date@v0.3.0 --replace
 
 prunesh plugin list
 prunesh plugin uninstall prunesh/date
