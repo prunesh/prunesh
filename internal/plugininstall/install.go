@@ -30,22 +30,14 @@ type Options struct {
 }
 
 // ParseRef splits a plugin ref into module and version.
-// Marketplace refs (author/command or author/command@version) are accepted with
-// an empty version meaning "latest". Go module refs require an explicit version.
+// The ref must be of the form module@version.
 func ParseRef(ref string) (module, version string, err error) {
 	if ref == "" {
 		return "", "", fmt.Errorf("ref is empty")
 	}
 	i := strings.LastIndex(ref, "@")
-	if i < 0 {
-		// No version — allowed for marketplace refs only.
-		if !isMarketplaceRef(ref) {
-			return "", "", fmt.Errorf("ref must be module@version")
-		}
-		return ref, "", nil
-	}
-	if i == 0 || i == len(ref)-1 {
-		return "", "", fmt.Errorf("ref must be module@version")
+	if i <= 0 || i == len(ref)-1 {
+		return "", "", fmt.Errorf("ref must be module@version (e.g. github.com/user/repo@v1.0.0)")
 	}
 	return ref[:i], ref[i+1:], nil
 }
@@ -55,7 +47,7 @@ func Install(opts Options) (*pluginregistry.Record, error) {
 	if opts.Module == "" {
 		return nil, fmt.Errorf("module is empty")
 	}
-	if opts.Version == "" && !isMarketplaceRef(opts.Module) {
+	if opts.Version == "" {
 		return nil, fmt.Errorf("version is empty")
 	}
 	if opts.CoreVersion == "" {
@@ -153,10 +145,6 @@ func resolveSource(opts Options, platform string) (srcDir, binary, resolvedVersi
 		}
 		bin := filepath.Join(opts.LocalDir, binName)
 		return opts.LocalDir, bin, "", nil
-	}
-	if isMarketplaceRef(opts.Module) {
-		srcDir, binary, resolvedVersion, err = resolveFromMarketplace(opts, platform)
-		return
 	}
 	if prebuilt, ok := tryPrebuilt(opts.Module, opts.Version, platform); ok {
 		srcDir, err = fetchGoModule(opts.Module, opts.Version)

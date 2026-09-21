@@ -36,7 +36,7 @@
           <a href="#how">How</a>
           <a class="opt" href="#reduction">Benchmark</a>
           <a class="opt" href="#modules">Modules</a>
-          <a href="https://prunesh.github.io/marketplace">Marketplace</a>
+          <a href="https://prunesh.github.io/marketplace">Plugins</a>
           <a href="https://github.com/prunesh/prunesh">GitHub</a>
         </nav>
       </header>
@@ -274,7 +274,7 @@
             <h2 id="arch-title">Everything is a module</h2>
             <p>
               The core is a hook, a proxy, and a registry. Modules never import each other.
-              Built-in and marketplace plugins implement the same <code>registry.Module</code>
+              Built-in and external plugins implement the same <code>registry.Module</code>
               interface — the proxy cannot tell them apart.
             </p>
           </header>
@@ -289,13 +289,13 @@
               </p>
             </article>
             <article>
-              <h3>Marketplace</h3>
+              <h3>External plugins</h3>
               <p>
                 External binaries installed to <code>~/.prunesh/plugins/</code> and
                 registered in <code>plugins.db</code>. Contract <code>stdin/v1</code>:
-                JSON on stdin/stdout. Any language. Core stays closed.
+                JSON on stdin/stdout. Any language. Install from any GitHub release.
                 Browse the
-                <a href="https://prunesh.github.io/marketplace">marketplace</a>.
+                <a href="https://prunesh.github.io/marketplace">plugin catalog</a>.
               </p>
             </article>
           </div>
@@ -304,7 +304,7 @@
             class="diagram"
             viewBox="0 0 720 430"
             role="img"
-            aria-label="registry.Module is implemented by compiled-in plugins and by marketplace binaries. proxy.Run resolves the active marketplace plugin from plugins.db, otherwise falls back to the built-in registry."
+            aria-label="registry.Module is implemented by compiled-in plugins and by external binaries installed from GitHub. proxy.Run resolves the active plugin from plugins.db, otherwise falls back to the built-in registry."
           >
             <defs>
               <marker id="arr2" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
@@ -334,7 +334,7 @@
 
             <g class="d-market">
               <rect x="400" y="136" width="280" height="150" class="d-box" />
-              <text x="540" y="168" class="d-label" text-anchor="middle">marketplace</text>
+              <text x="540" y="168" class="d-label" text-anchor="middle">external plugin</text>
               <text x="540" y="196" class="d-xs" text-anchor="middle">prunesh.json · stdin/v1</text>
               <text x="540" y="216" class="d-xs" text-anchor="middle">~/.prunesh/plugins/</text>
               <text x="540" y="236" class="d-xs" text-anchor="middle">plugins.db · active wins</text>
@@ -358,8 +358,9 @@
           <header class="block-head">
             <h2 id="modules-title">What ships in the binary</h2>
             <p>
-              Built-in modules compile into prunesh. Extend them with community plugins from the
-              <a href="https://prunesh.github.io/marketplace">marketplace</a>
+              Built-in modules compile into prunesh. Extend them with community plugins installed
+              from GitHub — browse the
+              <a href="https://prunesh.github.io/marketplace">plugin catalog</a>
               without touching core.
             </p>
           </header>
@@ -390,7 +391,7 @@
             </p>
             <div class="cta">
               <a class="btn btn-primary" href="https://github.com/prunesh/prunesh#readme">Get started</a>
-              <a class="btn btn-ghost" href="https://prunesh.github.io/marketplace">Browse marketplace</a>
+              <a class="btn btn-ghost" href="https://prunesh.github.io/marketplace">Browse plugins</a>
             </div>
             <div class="install-stack">
               <div class="install" data-install="prunesh init">
@@ -410,7 +411,7 @@
       <footer class="foot">
         <span class="foot-mark">prunesh</span>
         <nav class="foot-links">
-          <a href="https://prunesh.github.io/marketplace">Marketplace</a>
+          <a href="https://prunesh.github.io/marketplace">Plugins</a>
           <a href="https://github.com/prunesh/prunesh#readme">Docs</a>
           <a href="https://github.com/prunesh/prunesh">GitHub</a>
           <a href="https://github.com/prunesh/prunesh/blob/main/LICENSE">Apache 2.0</a>

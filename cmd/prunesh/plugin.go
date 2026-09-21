@@ -29,7 +29,7 @@ func runPlugin(args []string) {
 }
 
 func printPluginUsage() {
-	fmt.Fprintln(os.Stderr, "usage: prunesh plugin install <module@version> [--replace] | uninstall <id> | list")
+	fmt.Fprintln(os.Stderr, "usage: prunesh plugin install github.com/<user>/<repo>@<version> [--replace] | uninstall <id> | list")
 }
 
 func runPluginInstall(args []string) {
