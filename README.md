@@ -1,9 +1,16 @@
 <p align="center">
-  <strong>Token reduction for AI coding agents.</strong><br>
+  <a href="https://prunesh.github.io/prunesh">
+    <img src="docs/assets/hero-banner.svg" alt="prunesh — token reduction for AI coding agents" width="100%">
+  </a>
+</p>
+
+<p align="center">
   Intercepts shell commands, filters their output, and keeps the context window lean.
 </p>
 
 <p align="center">
+  <a href="https://prunesh.github.io/prunesh">Website</a> ·
+  <a href="https://prunesh.github.io/marketplace">Marketplace</a> ·
   <a href="#quick-start">Quick Start</a> ·
   <a href="#how-it-works">How it works</a> ·
   <a href="#benchmark">Benchmark</a> ·
@@ -14,22 +21,20 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache%202.0-0f1f38?labelColor=e2eaf2&color=0f1f38"></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-0.13.0-0f1f38?labelColor=e2eaf2&color=0f1f38">
-  <a href="https://go.dev"><img alt="Go" src="https://img.shields.io/badge/go-1.22+-0f1f38?labelColor=e2eaf2&color=0f1f38"></a>
-  <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux-0f1f38?labelColor=e2eaf2&color=0f1f38">
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache%202.0-211c17?labelColor=f5f0e8&color=211c17"></a>
+  <img alt="Version" src="https://img.shields.io/badge/version-0.13.0-211c17?labelColor=f5f0e8&color=211c17">
+  <a href="https://go.dev"><img alt="Go" src="https://img.shields.io/badge/go-1.22+-211c17?labelColor=f5f0e8&color=211c17"></a>
+  <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux-211c17?labelColor=f5f0e8&color=211c17">
 </p>
 
 <p align="center">
-  <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-supported-0f1f38?labelColor=e2eaf2&color=0f1f38">
-  <img alt="Cursor" src="https://img.shields.io/badge/Cursor-supported-0f1f38?labelColor=e2eaf2&color=0f1f38">
-  <img alt="Codex" src="https://img.shields.io/badge/Codex-supported-0f1f38?labelColor=e2eaf2&color=0f1f38">
-  <img alt="OpenCode" src="https://img.shields.io/badge/OpenCode-supported-0f1f38?labelColor=e2eaf2&color=0f1f38">
+  <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-supported-211c17?labelColor=f5f0e8&color=211c17">
+  <img alt="Cursor" src="https://img.shields.io/badge/Cursor-supported-211c17?labelColor=f5f0e8&color=211c17">
+  <img alt="Codex" src="https://img.shields.io/badge/Codex-supported-211c17?labelColor=f5f0e8&color=211c17">
+  <img alt="OpenCode" src="https://img.shields.io/badge/OpenCode-supported-211c17?labelColor=f5f0e8&color=211c17">
 </p>
 
 ---
-
-> *Podar es eliminar lo que sobra para que lo esencial crezca más fuerte.*
 
 ## Why prunesh?
 
@@ -65,15 +70,9 @@ Then restart the agent. Hooks register automatically — prunesh intercepts comm
 
 ## How it works
 
-```text
-Agent → Shell("git status")
-              ↓ PreToolUse → prunesh hook-pre --agent=<agent>
-         command becomes: prunesh git status
-              ↓ prunesh runs: git status --porcelain -b
-         compact grouped output
-              ↓
-         Agent receives filtered output
-```
+<p align="center">
+  <img src="docs/assets/how-it-works.svg" alt="Agent command rewritten by hook-pre to prunesh, filtered by the proxy, then returned with fewer tokens" width="720">
+</p>
 
 Two parts:
 
@@ -266,6 +265,12 @@ prunesh version                          Print version
 ```
 
 ## Architecture
+
+<p align="center">
+  <img src="docs/assets/architecture.svg" alt="registry.Module implemented by built-in and marketplace plugins, resolved by proxy.Run" width="720">
+</p>
+
+Built-in modules and marketplace plugins implement the same `registry.Module` interface. `proxy.Run` prefers an active marketplace plugin from `plugins.db`, otherwise falls back to the built-in registry — same code path either way.
 
 ```text
 prunesh/
