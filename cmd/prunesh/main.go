@@ -30,7 +30,7 @@ import (
 	_ "github.com/prunesh/prunesh/plugins/tree"
 )
 
-const version = "0.14.0"
+const version = "0.14.1"
 
 func usage() {
 	fmt.Fprintf(os.Stderr, `prunesh %s
