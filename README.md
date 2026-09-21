@@ -164,18 +164,30 @@ All built-in modules ship with the binary.
 
 ## Marketplace plugins
 
-External plugins ship as standalone repos and are installed with `prunesh plugin`:
+Discover and install external plugins from the [prunesh marketplace](https://prunesh.github.io/marketplace).
 
 ```bash
-prunesh plugin install github.com/prunesh/date@v0.13.0
-prunesh plugin install github.com/prunesh/date@v0.13.0 --replace
+# Install latest from the marketplace
+prunesh plugin install prunesh/date
+
+# Install a specific version from the marketplace
+prunesh plugin install prunesh/date@v0.3.0
+
+# Install directly from a Go module (bypasses the marketplace)
+prunesh plugin install github.com/prunesh/prunesh-date@v0.3.0
+
+# Install with replace (when another plugin already handles the same command)
+prunesh plugin install prunesh/date --replace
+
 prunesh plugin list
 prunesh plugin uninstall prunesh/date
 ```
 
 | Command | Description |
 |---|---|
-| `plugin install <module@version>` | Download, validate `prunesh.json` contract, build, register in `~/.prunesh/plugins.db` |
+| `plugin install <id>` | Latest version from the marketplace |
+| `plugin install <id@version>` | Pinned version from the marketplace |
+| `plugin install <module@version>` | Direct Go module install (requires full path e.g. `github.com/…`) |
 | `plugin install … --replace` | Required when another plugin is already active for the same command |
 | `plugin list` | List installed plugins; marks the active one per command |
 | `plugin uninstall <id>` | Remove by full id (e.g. `prunesh/date`); deletes `~/.prunesh/plugins/<id>/` |
@@ -188,7 +200,7 @@ Uninstalling the active plugin promotes the most recently installed survivor, or
 
 External plugins use contract `stdin/v1`: prunesh runs the plugin binary and exchanges JSON on stdin/stdout. Any language works as long as the binary implements the protocol.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) and the reference plugin [prunesh/date](https://github.com/prunesh/date).
+To publish a plugin to the marketplace, see the [marketplace README](https://github.com/prunesh/marketplace#publishing-a-plugin).
 
 ## Adding a built-in module
 
@@ -244,7 +256,9 @@ prunesh json-merge <file>                Deep-merge JSON from stdin into an agen
 prunesh <module> [args...]               Proxy: run a registered command through prunesh
 prunesh mcp-scan                         List MCP server tools, suggest passthrough prefixes
 prunesh gain                             Token savings analytics
-prunesh plugin install <mod@ver> [--replace]  Install an external plugin
+prunesh plugin install <id>                   Install latest plugin from the marketplace
+prunesh plugin install <id@version>           Install pinned version from the marketplace
+prunesh plugin install <mod@ver> [--replace]  Install directly from a Go module
 prunesh plugin uninstall <id>            Remove an installed plugin by full id
 prunesh plugin list                      List installed plugins (active marked)
 prunesh update [--check] [--yes]         Check for and install updates
