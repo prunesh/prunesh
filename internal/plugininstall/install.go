@@ -29,13 +29,22 @@ type Options struct {
 	LocalDir    string // if set, use this local directory instead of downloading or building
 }
 
-// ParseRef splits module@version. Both parts are required.
+// ParseRef splits a plugin ref into module and version.
+// Marketplace refs (author/command or author/command@version) are accepted with
+// an empty version meaning "latest". Go module refs require an explicit version.
 func ParseRef(ref string) (module, version string, err error) {
 	if ref == "" {
 		return "", "", fmt.Errorf("ref is empty")
 	}
 	i := strings.LastIndex(ref, "@")
-	if i <= 0 || i == len(ref)-1 {
+	if i < 0 {
+		// No version — allowed for marketplace refs only.
+		if !isMarketplaceRef(ref) {
+			return "", "", fmt.Errorf("ref must be module@version")
+		}
+		return ref, "", nil
+	}
+	if i == 0 || i == len(ref)-1 {
 		return "", "", fmt.Errorf("ref must be module@version")
 	}
 	return ref[:i], ref[i+1:], nil
@@ -46,7 +55,7 @@ func Install(opts Options) (*pluginregistry.Record, error) {
 	if opts.Module == "" {
 		return nil, fmt.Errorf("module is empty")
 	}
-	if opts.Version == "" {
+	if opts.Version == "" && !isMarketplaceRef(opts.Module) {
 		return nil, fmt.Errorf("version is empty")
 	}
 	if opts.CoreVersion == "" {
@@ -54,9 +63,12 @@ func Install(opts Options) (*pluginregistry.Record, error) {
 	}
 
 	platform := runtime.GOOS + "/" + runtime.GOARCH
-	srcDir, binary, err := resolveSource(opts, platform)
+	srcDir, binary, resolvedVersion, err := resolveSource(opts, platform)
 	if err != nil {
 		return nil, err
+	}
+	if resolvedVersion != "" {
+		opts.Version = resolvedVersion
 	}
 
 	manifestPath := filepath.Join(srcDir, pluginmanifest.ManifestFileName)
@@ -130,31 +142,38 @@ func checkReplaceConflict(db *pluginregistry.DB, id, argv0 string, replace bool)
 	return nil
 }
 
-func resolveSource(opts Options, platform string) (srcDir, binary string, err error) {
+// resolveSource returns (srcDir, binaryPath, resolvedVersion, error).
+// resolvedVersion is non-empty only for marketplace refs where the version was
+// determined by fetching the index (i.e. opts.Version was empty or "latest").
+func resolveSource(opts Options, platform string) (srcDir, binary, resolvedVersion string, err error) {
 	if opts.LocalDir != "" {
 		binName := filepath.Base(opts.Module)
 		if binName == "" || binName == "." {
-			return "", "", fmt.Errorf("cannot derive binary name from module %q", opts.Module)
+			return "", "", "", fmt.Errorf("cannot derive binary name from module %q", opts.Module)
 		}
 		bin := filepath.Join(opts.LocalDir, binName)
-		return opts.LocalDir, bin, nil
+		return opts.LocalDir, bin, "", nil
+	}
+	if isMarketplaceRef(opts.Module) {
+		srcDir, binary, resolvedVersion, err = resolveFromMarketplace(opts, platform)
+		return
 	}
 	if prebuilt, ok := tryPrebuilt(opts.Module, opts.Version, platform); ok {
 		srcDir, err = fetchGoModule(opts.Module, opts.Version)
 		if err != nil {
-			return "", "", err
+			return "", "", "", err
 		}
-		return srcDir, prebuilt, nil
+		return srcDir, prebuilt, "", nil
 	}
 	srcDir, err = fetchGoModule(opts.Module, opts.Version)
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 	binary, err = buildModule(opts.Module, opts.Version)
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
-	return srcDir, binary, nil
+	return srcDir, binary, "", nil
 }
 
 func tryPrebuilt(module, version, platform string) (path string, ok bool) {
