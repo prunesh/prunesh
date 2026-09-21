@@ -1,46 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="720" height="430" viewBox="0 0 720 430" role="img" aria-label="How prunesh works: agent command rewritten by hook-pre, filtered by the proxy, then returned to the agent with fewer tokens">
   <title>How prunesh works</title>
   <rect width="720" height="430" fill="#f5f0e8"/>
   <defs>
     <marker id="arr" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
-      <path d="M0,0 L0,7 L7,3.5 z" fill="#211c17"/>
+      <path d="M0,0 L0,7 L7,3.5 z" fill="#6e6255"/>
     </marker>
   </defs>
 
-  <text x="360" y="22" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#6e6255">Claude Code · Cursor · Codex · OpenCode</text>
+  <text x="360" y="22" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#a69786">Claude Code / Cursor / Codex / OpenCode</text>
 
-  <rect x="230" y="36" width="260" height="36" fill="#f5f0e8" stroke="#211c17" stroke-width="1.25"/>
-  <text x="360" y="59" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#211c17">git log</text>
+  <rect x="230" y="36" width="260" height="36" fill="#ebe3d7" stroke="#6e6255" stroke-width="1.5"/>
+  <text x="360" y="59" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#3d3228">git log</text>
 
-  <line x1="360" y1="72" x2="360" y2="96" stroke="#211c17" stroke-width="1.25" marker-end="url(#arr)"/>
-  <text x="348" y="88" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#6e6255">hook-pre</text>
+  <line x1="360" y1="72" x2="360" y2="96" stroke="#6e6255" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="348" y="88" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#a69786">hook-pre</text>
 
-  <rect x="190" y="96" width="340" height="50" fill="#f5f0e8" stroke="#211c17" stroke-width="1.25"/>
-  <text x="360" y="116" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#211c17">prunesh git log</text>
-  <text x="360" y="134" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#6e6255">argv0 rewrite · agent never changes the tool</text>
+  <rect x="190" y="96" width="340" height="50" fill="#ebe3d7" stroke="#6e6255" stroke-width="1.5"/>
+  <text x="360" y="116" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#3d3228">prunesh git log</text>
+  <text x="360" y="134" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#6e6255">argv0 rewrite - agent never changes the tool</text>
 
-  <line x1="360" y1="146" x2="360" y2="170" stroke="#211c17" stroke-width="1.25" marker-end="url(#arr)"/>
-  <text x="348" y="162" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#6e6255">Rewrite()</text>
+  <line x1="360" y1="146" x2="360" y2="170" stroke="#6e6255" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="348" y="162" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#a69786">Rewrite()</text>
 
-  <rect x="190" y="170" width="340" height="50" fill="#f5f0e8" stroke="#211c17" stroke-width="1.25"/>
-  <text x="360" y="190" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#211c17">git log  pretty, capped</text>
+  <rect x="190" y="170" width="340" height="50" fill="#ebe3d7" stroke="#6e6255" stroke-width="1.5"/>
+  <text x="360" y="190" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#3d3228">git log - pretty, capped</text>
   <text x="360" y="208" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#6e6255">module injects flags before exec</text>
 
-  <line x1="360" y1="220" x2="360" y2="244" stroke="#211c17" stroke-width="1.25" marker-end="url(#arr)"/>
-  <text x="348" y="236" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#6e6255">exec</text>
+  <line x1="360" y1="220" x2="360" y2="244" stroke="#6e6255" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="348" y="236" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#a69786">exec</text>
 
-  <rect x="230" y="244" width="260" height="36" fill="#f5f0e8" stroke="#211c17" stroke-width="1.25"/>
-  <text x="360" y="267" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#211c17">raw stdout</text>
+  <rect x="230" y="244" width="260" height="36" fill="#ebe3d7" stroke="#6e6255" stroke-width="1.5"/>
+  <text x="360" y="267" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#3d3228">raw stdout</text>
 
-  <line x1="360" y1="280" x2="360" y2="304" stroke="#211c17" stroke-width="1.25" marker-end="url(#arr)"/>
-  <text x="348" y="296" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#6e6255">FilterOutput</text>
+  <line x1="360" y1="280" x2="360" y2="304" stroke="#6e6255" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="348" y="296" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#a69786">FilterOutput</text>
 
-  <rect x="160" y="304" width="400" height="50" fill="#f5f0e8" stroke="#211c17" stroke-width="1.25"/>
-  <text x="360" y="324" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#211c17">1,917 tokens ’ 244 tokens</text>
-  <text x="360" y="342" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#6e6255">compact stdout · recorded by prunesh gain</text>
+  <rect x="160" y="304" width="400" height="50" fill="#ebe3d7" stroke="#6e6255" stroke-width="1.5"/>
+  <text x="360" y="324" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#3d3228">1,917 tokens -&gt; 244 tokens</text>
+  <text x="360" y="342" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#6e6255">compact stdout - recorded by prunesh gain</text>
 
-  <line x1="360" y1="354" x2="360" y2="378" stroke="#211c17" stroke-width="1.25" marker-end="url(#arr)"/>
+  <line x1="360" y1="354" x2="360" y2="378" stroke="#6e6255" stroke-width="1.5" marker-end="url(#arr)"/>
 
-  <rect x="230" y="378" width="260" height="36" fill="#f5f0e8" stroke="#211c17" stroke-width="1.25"/>
-  <text x="360" y="401" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#211c17">agent context</text>
+  <rect x="230" y="378" width="260" height="36" fill="#ebe3d7" stroke="#6e6255" stroke-width="1.5"/>
+  <text x="360" y="401" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#3d3228">agent context</text>
 </svg>

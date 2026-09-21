@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://prunesh.github.io/prunesh">
-    <img src="docs/assets/hero-banner.svg" alt="prunesh — token reduction for AI coding agents" width="100%">
+    <img src="docs/assets/hero-banner.png" alt="prunesh - token reduction for AI coding agents" width="100%">
   </a>
 </p>
 
@@ -21,17 +21,17 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache%202.0-211c17?labelColor=f5f0e8&color=211c17"></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-0.14.1-211c17?labelColor=f5f0e8&color=211c17">
-  <a href="https://go.dev"><img alt="Go" src="https://img.shields.io/badge/go-1.22+-211c17?labelColor=f5f0e8&color=211c17"></a>
-  <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux-211c17?labelColor=f5f0e8&color=211c17">
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache%202.0-6e6255?labelColor=ebe3d7&color=6e6255"></a>
+  <img alt="Version" src="https://img.shields.io/badge/version-0.14.1-6e6255?labelColor=ebe3d7&color=6e6255">
+  <a href="https://go.dev"><img alt="Go" src="https://img.shields.io/badge/go-1.22+-6e6255?labelColor=ebe3d7&color=6e6255"></a>
+  <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux-6e6255?labelColor=ebe3d7&color=6e6255">
 </p>
 
 <p align="center">
-  <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-supported-211c17?labelColor=f5f0e8&color=211c17">
-  <img alt="Cursor" src="https://img.shields.io/badge/Cursor-supported-211c17?labelColor=f5f0e8&color=211c17">
-  <img alt="Codex" src="https://img.shields.io/badge/Codex-supported-211c17?labelColor=f5f0e8&color=211c17">
-  <img alt="OpenCode" src="https://img.shields.io/badge/OpenCode-supported-211c17?labelColor=f5f0e8&color=211c17">
+  <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-supported-6e6255?labelColor=ebe3d7&color=6e6255">
+  <img alt="Cursor" src="https://img.shields.io/badge/Cursor-supported-6e6255?labelColor=ebe3d7&color=6e6255">
+  <img alt="Codex" src="https://img.shields.io/badge/Codex-supported-6e6255?labelColor=ebe3d7&color=6e6255">
+  <img alt="OpenCode" src="https://img.shields.io/badge/OpenCode-supported-6e6255?labelColor=ebe3d7&color=6e6255">
 </p>
 
 ---
@@ -71,7 +71,7 @@ Then restart the agent. Hooks register automatically — prunesh intercepts comm
 ## How it works
 
 <p align="center">
-  <img src="docs/assets/how-it-works.svg" alt="Agent command rewritten by hook-pre to prunesh, filtered by the proxy, then returned with fewer tokens" width="720">
+  <img src="docs/assets/how-it-works.png" alt="Agent command rewritten by hook-pre to prunesh, filtered by the proxy, then returned with fewer tokens" width="720">
 </p>
 
 Two parts:
@@ -267,7 +267,7 @@ prunesh version                          Print version
 ## Architecture
 
 <p align="center">
-  <img src="docs/assets/architecture.svg" alt="registry.Module implemented by built-in and marketplace plugins, resolved by proxy.Run" width="720">
+  <img src="docs/assets/architecture.png" alt="registry.Module implemented by built-in and marketplace plugins, resolved by proxy.Run" width="720">
 </p>
 
 Built-in modules and marketplace plugins implement the same `registry.Module` interface. `proxy.Run` prefers an active marketplace plugin from `plugins.db`, otherwise falls back to the built-in registry — same code path either way.
