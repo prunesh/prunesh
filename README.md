@@ -318,3 +318,9 @@ When the `PreToolUse` hook is added to `~/.codex/hooks.json` for the first time,
 ## License
 
 [Apache 2.0](LICENSE): use, modify and distribute freely; retain the copyright notice and include attribution on redistribution.
+
+## Community
+
+- [Contributing](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Security](SECURITY.md)
