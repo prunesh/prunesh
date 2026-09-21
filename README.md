@@ -22,7 +22,7 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache%202.0-211c17?labelColor=f5f0e8&color=211c17"></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-0.13.0-211c17?labelColor=f5f0e8&color=211c17">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.14.0-211c17?labelColor=f5f0e8&color=211c17">
   <a href="https://go.dev"><img alt="Go" src="https://img.shields.io/badge/go-1.22+-211c17?labelColor=f5f0e8&color=211c17"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux-211c17?labelColor=f5f0e8&color=211c17">
 </p>

@@ -11,7 +11,7 @@
     {
       "name": "prunesh",
       "description": "PreToolUse rewrite plus PostToolUse filtering for shell, git, grep, find, ls, Read, and MCP tool output.",
-      "version": "0.13.0",
+      "version": "0.14.0",
       "author": {
         "name": "jmeiracorbal"
       },
