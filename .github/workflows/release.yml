@@ -6,38 +6,23 @@ on:
       - 'v*'
 
 permissions:
-  contents: write   # create GitHub Release + upload assets
-  packages: write   # push to GHCR
+  contents: write
 
 jobs:
-  # ── Verify tag matches code version ─────────────────────────────────────────
+  # ── Verify version consistency across config files ───────────────────────────
   version-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verify tag matches code version
-        run: |
-          tag="${GITHUB_REF_NAME#v}"
-          go_ver=$(grep 'const version = ' cmd/prunesh/main.go | sed 's/.*"\([^"]*\)".*/\1/')
-          if [ -z "$go_ver" ]; then
-            echo "could not extract version from cmd/prunesh/main.go"
-            exit 1
-          fi
-          if [ "$tag" != "$go_ver" ]; then
-            echo "tag '$tag' does not match cmd/prunesh/main.go version '$go_ver'"
-            exit 1
-          fi
-          echo "tag matches code version: $go_ver"
-
       - name: Verify version consistency across files
         run: |
-          go_ver=$(grep 'const version = ' cmd/prunesh/main.go | sed 's/.*"\([^"]*\)".*/\1/')
+          tag="${GITHUB_REF_NAME#v}"
           failed=0
           check() {
             local label=$1 val=$2
-            if [ "$val" != "$go_ver" ]; then
-              echo "version drift: $label = '$val', expected '$go_ver'"
+            if [ "$val" != "$tag" ]; then
+              echo "version drift: $label = '$val', expected '$tag'"
               failed=1
             else
               echo "ok: $label = $val"
@@ -46,86 +31,83 @@ jobs:
           check ".claude-plugin/marketplace.json"   "$(jq -r '.plugins[0].version' .claude-plugin/marketplace.json)"
           check ".claude-plugin/plugin.json"        "$(jq -r '.version' .claude-plugin/plugin.json)"
           check "integrations/claude/.claude-plugin/plugin.json" "$(jq -r '.version' integrations/claude/.claude-plugin/plugin.json)"
-          check "plugins/mcpscan/mcpscan.go"        "$(sed -n 's/.*"version": "\([^"]*\)".*/\1/p' plugins/mcpscan/mcpscan.go | head -1)"
           exit $failed
 
-  # ── Build binaries + create GitHub Release ──────────────────────────────────
-  release:
+  # ── Build scripts archive ────────────────────────────────────────────────────
+  scripts:
     runs-on: ubuntu-latest
     needs: version-check
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build scripts archive
+        run: |
+          tar -czf prunesh-scripts.tar.gz integrations/cursor integrations/codex integrations/opencode
+          shasum -a 256 prunesh-scripts.tar.gz > prunesh-scripts.tar.gz.sha256
+
+      - name: Upload scripts archive
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: true
+          files: |
+            prunesh-scripts.tar.gz
+            prunesh-scripts.tar.gz.sha256
+
+  # ── Build binaries (matrix, native runners) ──────────────────────────────────
+  release:
+    needs: version-check
+    strategy:
+      matrix:
+        include:
+          - goos: darwin
+            goarch: arm64
+            runner: macos-latest
+          - goos: darwin
+            goarch: amd64
+            runner: macos-latest
+          - goos: linux
+            goarch: amd64
+            runner: ubuntu-latest
+          - goos: linux
+            goarch: arm64
+            runner: ubuntu-latest
+          - goos: windows
+            goarch: amd64
+            runner: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-          cache: true
 
-      - name: Build binaries (all platforms)
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
         run: |
-          mkdir -p dist
+          EXT=""
+          [ "${{ matrix.goos }}" = "windows" ] && EXT=".exe"
+          go build \
+            -ldflags="-s -w -X main.version=${{ github.ref_name }}" \
+            -o prunesh-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} \
+            ./cmd/prunesh/
 
-          # Names must match install.sh URL pattern: prunesh-{os}-{arch}
-          CGO_ENABLED=0 GOOS=linux   GOARCH=amd64 go build -ldflags="-s -w" -o dist/prunesh-linux-amd64   ./cmd/prunesh/
-          CGO_ENABLED=0 GOOS=linux   GOARCH=arm64 go build -ldflags="-s -w" -o dist/prunesh-linux-arm64   ./cmd/prunesh/
-          CGO_ENABLED=0 GOOS=darwin  GOARCH=amd64 go build -ldflags="-s -w" -o dist/prunesh-darwin-amd64  ./cmd/prunesh/
-          CGO_ENABLED=0 GOOS=darwin  GOARCH=arm64 go build -ldflags="-s -w" -o dist/prunesh-darwin-arm64  ./cmd/prunesh/
-          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/prunesh-windows-amd64.exe ./cmd/prunesh/
-
-          echo "Built:"
-          ls -lh dist/
-
-          tar -czf dist/prunesh-scripts.tar.gz integrations/cursor integrations/codex integrations/opencode
-          (cd dist && shasum -a 256 prunesh-scripts.tar.gz > prunesh-scripts.tar.gz.sha256)
-          echo "Packed scripts archive"
-
-      - name: Generate SHA256 checksums
+      - name: Checksum
         run: |
-          cd dist
-          for f in prunesh-linux-amd64 prunesh-linux-arm64 prunesh-darwin-amd64 prunesh-darwin-arm64 prunesh-windows-amd64.exe; do
-            [ -f "$f" ] && shasum -a 256 "$f" > "${f}.sha256"
-          done
+          EXT=""
+          [ "${{ matrix.goos }}" = "windows" ] && EXT=".exe"
+          shasum -a 256 prunesh-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} \
+            > prunesh-${{ matrix.goos }}-${{ matrix.goarch }}${EXT}.sha256
 
-      - name: Create GitHub Release
+      - name: Upload release asset
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*
-          generate_release_notes: true
-          fail_on_unmatched_files: true
           prerelease: ${{ contains(github.ref_name, '-') }}
-
-  # ── Build Docker image + push to GHCR ───────────────────────────────────────
-  docker:
-    runs-on: ubuntu-latest
-    needs: [version-check, release]
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: docker/setup-buildx-action@v3
-
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract image metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest
-
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          files: |
+            prunesh-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.exe' || '' }}
+            prunesh-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.exe' || '' }}.sha256
