@@ -28,7 +28,7 @@ jobs:
 
       - name: Check version consistency
         run: |
-          go_ver=$(grep 'const version = ' cmd/prunesh/main.go | sed 's/.*"\([^"]*\)".*/\1/')
+          go_ver=$(grep 'version = ' cmd/prunesh/main.go | sed 's/.*"\([^"]*\)".*/\1/')
           if [ -z "$go_ver" ]; then
             echo "could not extract version from cmd/prunesh/main.go"
             exit 1
