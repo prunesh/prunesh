@@ -7,9 +7,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/prunesh/prunesh/internal/pluginregistry"
 	"github.com/prunesh/prunesh/internal/hook"
 	"github.com/prunesh/prunesh/internal/jsonmerge"
+	"github.com/prunesh/prunesh/internal/pluginregistry"
+	"github.com/prunesh/prunesh/internal/projectmarker"
 	"github.com/prunesh/prunesh/internal/proxy"
 	"github.com/prunesh/prunesh/internal/registry"
 	"github.com/prunesh/prunesh/plugins/gain"
@@ -75,6 +76,9 @@ func main() {
 		runInit()
 
 	case "hook-pre":
+		if !inActiveProject() {
+			os.Exit(0)
+		}
 		agent, err := parseAgentFlag(os.Args[2:])
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "prunesh hook-pre: %v\n", err)
@@ -92,6 +96,9 @@ func main() {
 		}
 
 	case "hook-post":
+		if !inActiveProject() {
+			os.Exit(0)
+		}
 		agent, err := parseAgentFlag(os.Args[2:])
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "prunesh hook-post: %v\n", err)
@@ -151,6 +158,14 @@ func main() {
 		}
 		os.Exit(proxy.Run(os.Args[1], os.Args[2:]))
 	}
+}
+
+func inActiveProject() bool {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return false
+	}
+	return projectmarker.InActiveProject(cwd)
 }
 
 func parseAgentFlag(args []string) (hook.Agent, error) {
