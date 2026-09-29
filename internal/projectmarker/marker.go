@@ -28,6 +28,17 @@ func Exists(root string) bool {
 	return err == nil
 }
 
+// InActiveProject reports whether dir is inside a git repository that has a
+// .prunesh marker at its root. Returns false when git is unavailable, dir is
+// not inside a git repository, or the marker is absent.
+func InActiveProject(dir string) bool {
+	out, err := exec.Command("git", "-C", dir, "rev-parse", "--show-toplevel").Output()
+	if err != nil {
+		return false
+	}
+	return Exists(strings.TrimSpace(string(out)))
+}
+
 // Create writes an empty .prunesh marker at root. Idempotent.
 func Create(root string) error {
 	path := filepath.Join(root, MarkerName)
