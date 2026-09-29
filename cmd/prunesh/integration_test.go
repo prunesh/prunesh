@@ -16,6 +16,7 @@ import (
 
 	"github.com/prunesh/prunesh/internal/plugininstall"
 	"github.com/prunesh/prunesh/internal/pluginmanifest"
+	"github.com/prunesh/prunesh/internal/projectmarker"
 	"github.com/prunesh/prunesh/internal/testhome"
 )
 
@@ -80,6 +81,20 @@ func initRepo(t *testing.T, dir string) {
 	if err := os.WriteFile(filepath.Join(dir, "draft.go"), []byte("package main\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func initActiveProject(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	cmd := exec.Command("git", "init", "-q")
+	cmd.Dir = dir
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v\n%s", err, out)
+	}
+	if err := projectmarker.Create(dir); err != nil {
+		t.Fatal(err)
+	}
+	return dir
 }
 
 // run ejecuta prunesh con los args dados en workDir y devuelve stdout+stderr y el exit code.
@@ -325,9 +340,11 @@ func TestIntegrationVersion(t *testing.T) {
 func TestIntegrationHookPreDate(t *testing.T) {
 	home := installTestDatePlugin(t)
 	bin := buildBinary(t)
+	dir := initActiveProject(t)
 	payload := `{"tool_name":"Bash","tool_input":{"command":"date"}}`
 
 	cmd := exec.Command(bin, "hook-pre", "--agent=claudecode")
+	cmd.Dir = dir
 	cmd.Stdin = strings.NewReader(payload)
 	cmd.Env = append(os.Environ(), "HOME="+home)
 	out, err := cmd.Output()
@@ -341,9 +358,11 @@ func TestIntegrationHookPreDate(t *testing.T) {
 
 func TestIntegrationHookPreDateWithoutFilter(t *testing.T) {
 	bin := buildBinary(t)
+	dir := initActiveProject(t)
 	payload := `{"tool_name":"Bash","tool_input":{"command":"date"}}`
 
 	cmd := exec.Command(bin, "hook-pre", "--agent=claudecode")
+	cmd.Dir = dir
 	cmd.Stdin = strings.NewReader(payload)
 	cmd.Env = append(os.Environ(), "HOME="+t.TempDir())
 	out, _ := cmd.Output()
@@ -354,9 +373,11 @@ func TestIntegrationHookPreDateWithoutFilter(t *testing.T) {
 
 func TestIntegrationHookPreDateAlreadyProxied(t *testing.T) {
 	bin := buildBinary(t)
+	dir := initActiveProject(t)
 	payload := `{"tool_name":"Bash","tool_input":{"command":"prunesh date"}}`
 
 	cmd := exec.Command(bin, "hook-pre", "--agent=claudecode")
+	cmd.Dir = dir
 	cmd.Stdin = strings.NewReader(payload)
 	cmd.Env = append(os.Environ(), "HOME="+t.TempDir())
 	out, _ := cmd.Output()

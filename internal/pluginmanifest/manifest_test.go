@@ -3,7 +3,9 @@ package pluginmanifest_test
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -132,14 +134,21 @@ func TestValidatePruneshCoreVersionMinPrereleaseBelowBase(t *testing.T) {
 
 func TestParseDateManifest(t *testing.T) {
 	// Requires github.com/prunesh/date to be published. Skip until marketplace migration completes.
-	if _, err := downloadModuleDir("github.com/prunesh/date@v0.12.0"); err != nil {
-		t.Skip("github.com/prunesh/date@v0.12.0 not yet published")
+	const dateModule = "github.com/prunesh/date@v0.13.0"
+	if _, err := downloadModuleDir(dateModule); err != nil {
+		t.Skip(dateModule + " not yet published")
 	}
-	dir, err := downloadModuleDir("github.com/prunesh/date@v0.12.0")
+	dir, err := downloadModuleDir(dateModule)
 	if err != nil {
 		t.Fatal(err)
 	}
-	m, err := pluginmanifest.ParseFile(dir + "/prunesh.json")
+	manifestPath := filepath.Join(dir, pluginmanifest.ManifestFileName)
+	if _, err := os.Stat(manifestPath); os.IsNotExist(err) {
+		t.Skip(dateModule + " does not include prunesh.json")
+	} else if err != nil {
+		t.Fatal(err)
+	}
+	m, err := pluginmanifest.ParseFile(manifestPath)
 	if err != nil {
 		t.Fatal(err)
 	}
