@@ -195,6 +195,62 @@ func TestMigrateFromFiltersTable(t *testing.T) {
 	}
 }
 
+func TestMigrateLegacyMigrationMetadata(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	dbDir := filepath.Join(home, ".prunesh")
+	if err := os.MkdirAll(dbDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	legacyDB, err := sql.Open("sqlite", filepath.Join(dbDir, "plugins.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = legacyDB.Exec(`
+		CREATE TABLE schema_migrations (
+			version TEXT PRIMARY KEY,
+			applied_at TEXT NOT NULL DEFAULT (datetime('now'))
+		);
+		INSERT INTO schema_migrations (version) VALUES ('0001'), ('0002');
+		CREATE TABLE plugins (
+			id TEXT PRIMARY KEY, module TEXT NOT NULL, version TEXT NOT NULL,
+			argv0 TEXT NOT NULL, contract TEXT NOT NULL,
+			binary_path TEXT NOT NULL, manifest_path TEXT NOT NULL,
+			installed_at INTEGER NOT NULL
+		);
+		INSERT INTO plugins VALUES ('prunesh/date','github.com/prunesh/date','v0.2.0','date','stdin/v1','/tmp/date','/tmp/prunesh.toml',1000);
+	`)
+	if closeErr := legacyDB.Close(); err == nil {
+		err = closeErr
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	db, err := pluginregistry.Open()
+	if err != nil {
+		t.Fatalf("Open after legacy metadata seed: %v", err)
+	}
+	recs, err := db.List()
+	if err != nil {
+		db.Close()
+		t.Fatal(err)
+	}
+	if len(recs) != 1 || recs[0].ID != "prunesh/date" {
+		db.Close()
+		t.Fatalf("expected existing plugin to survive metadata upgrade, got %+v", recs)
+	}
+	db.Close()
+
+	// Opening again confirms the upgrade is idempotent.
+	db, err = pluginregistry.Open()
+	if err != nil {
+		t.Fatalf("reopen upgraded metadata: %v", err)
+	}
+	db.Close()
+}
+
 func TestDirtyMigrationIsReapplied(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)

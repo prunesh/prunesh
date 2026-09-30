@@ -196,6 +196,17 @@ func applyMigrations(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
+	legacyChecksums, err := ensureMigrationMetadata(db)
+	if err != nil {
+		return err
+	}
+	if legacyChecksums {
+		for _, f := range files {
+			if _, err := db.Exec(`UPDATE schema_migrations SET checksum = ? WHERE version = ? AND checksum = ''`, f.checksum, f.version); err != nil {
+				return fmt.Errorf("backfill migration %s checksum: %w", f.version, err)
+			}
+		}
+	}
 	for _, f := range files {
 		var storedChecksum string
 		var dirty int
@@ -224,6 +235,49 @@ func applyMigrations(db *sql.DB) error {
 		}
 	}
 	return validateSchema(db)
+}
+
+// ensureMigrationMetadata upgrades the migration bookkeeping table created by
+// older prunesh releases. Those releases recorded versions without checksums.
+func ensureMigrationMetadata(db *sql.DB) (bool, error) {
+	rows, err := db.Query(`PRAGMA table_info(schema_migrations)`)
+	if err != nil {
+		return false, fmt.Errorf("inspect schema_migrations: %w", err)
+	}
+	columns := map[string]bool{}
+	for rows.Next() {
+		var cid, notNull, primaryKey int
+		var name, typ string
+		var defaultValue any
+		if err := rows.Scan(&cid, &name, &typ, &notNull, &defaultValue, &primaryKey); err != nil {
+			rows.Close()
+			return false, fmt.Errorf("read schema_migrations columns: %w", err)
+		}
+		columns[name] = true
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return false, fmt.Errorf("read schema_migrations columns: %w", err)
+	}
+	if err := rows.Close(); err != nil {
+		return false, fmt.Errorf("close schema_migrations columns: %w", err)
+	}
+	if !columns["version"] {
+		return false, fmt.Errorf("schema invalid: schema_migrations.version missing")
+	}
+
+	legacyChecksums := !columns["checksum"]
+	if legacyChecksums {
+		if _, err := db.Exec(`ALTER TABLE schema_migrations ADD COLUMN checksum TEXT NOT NULL DEFAULT ''`); err != nil {
+			return false, fmt.Errorf("add schema_migrations.checksum: %w", err)
+		}
+	}
+	if !columns["dirty"] {
+		if _, err := db.Exec(`ALTER TABLE schema_migrations ADD COLUMN dirty INTEGER NOT NULL DEFAULT 0`); err != nil {
+			return false, fmt.Errorf("add schema_migrations.dirty: %w", err)
+		}
+	}
+	return legacyChecksums, nil
 }
 
 func runMigration(db *sql.DB, f migrationFile) error {
