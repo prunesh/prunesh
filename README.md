@@ -22,7 +22,7 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache%202.0-6e6255?labelColor=ebe3d7&color=6e6255"></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-0.15.2-6e6255?labelColor=ebe3d7&color=6e6255">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.16.0-6e6255?labelColor=ebe3d7&color=6e6255">
   <a href="https://go.dev"><img alt="Go" src="https://img.shields.io/badge/go-1.22+-6e6255?labelColor=ebe3d7&color=6e6255"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux-6e6255?labelColor=ebe3d7&color=6e6255">
 </p>
@@ -193,7 +193,7 @@ Uninstalling the active plugin promotes the most recently installed survivor, or
 
 External plugins use contract `stdin/v1`: prunesh runs the plugin binary and exchanges JSON on stdin/stdout. Any language works as long as the binary implements the protocol.
 
-To publish a plugin to the marketplace, see the [marketplace README](https://github.com/prunesh/marketplace#publishing-a-plugin).
+To share a plugin, publish a GitHub release with the binary and a `prunesh.toml` manifest. Users install it directly with `prunesh plugin install github.com/<user>/<repo>@<version>`.
 
 ## Adding a built-in module
 
@@ -283,7 +283,7 @@ prunesh/
 │   ├── pluginregistry/     # SQLite DB for installed plugins
 │   ├── pluginsubprocess/   # stdin/v1 protocol adapter
 │   ├── plugininstall/      # download, validate, install plugin binaries
-│   └── pluginmanifest/     # prunesh.json manifest parsing and validation
+│   └── pluginmanifest/     # prunesh.toml manifest parsing and validation
 ├── plugins/                # built-in modules (compiled into the binary)
 └── integrations/
     ├── claude/             # Claude Code plugin (hooks + scripts)

@@ -2,7 +2,6 @@ package plugininstall_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -12,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/BurntSushi/toml"
 	"github.com/prunesh/prunesh/internal/plugininstall"
 	"github.com/prunesh/prunesh/internal/pluginmanifest"
 	"github.com/prunesh/prunesh/internal/pluginregistry"
@@ -45,7 +45,7 @@ func main() {
 }
 `
 
-// buildLocalPlugin compiles a stub binary and writes prunesh.json to dir,
+// buildLocalPlugin compiles a stub binary and writes prunesh.toml to dir,
 // returning the dir path so it can be passed as Options.LocalDir.
 func buildLocalPlugin(t *testing.T, id, argv0 string) string {
 	t.Helper()
@@ -74,11 +74,11 @@ func buildLocalPlugin(t *testing.T, id, argv0 string) string {
 			Constraint: "min",
 		},
 	}
-	data, err := json.Marshal(manifest)
-	if err != nil {
+	var buf bytes.Buffer
+	if err := toml.NewEncoder(&buf).Encode(manifest); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, pluginmanifest.ManifestFileName), data, 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, pluginmanifest.ManifestFileName), buf.Bytes(), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	return dir

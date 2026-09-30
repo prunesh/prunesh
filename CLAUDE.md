@@ -44,7 +44,7 @@ External plugins are binaries that speak the `stdin/v1` JSON protocol on stdin/s
 | `pluginregistry` | SQLite DB (`~/.prunesh/plugins.db`) — tracks installed plugins |
 | `pluginsubprocess` | Adapts an external binary to `registry.Module` via stdin/v1 |
 | `plugininstall` | Downloads, validates, and installs plugin binaries |
-| `pluginmanifest` | Parses and validates `prunesh.json` plugin manifests |
+| `pluginmanifest` | Parses and validates `prunesh.toml` plugin manifests |
 
 Built-in plugins in `plugins/` are compiled into the binary and registered via `init()`. External plugins use the subprocess adapter. Both implement `registry.Module` — the proxy treats them identically.
 
@@ -81,21 +81,19 @@ Response (plugin binary → core):
 
 `changed: false` short-circuits processing — the original value passes through unchanged. `exit_code` is -1 when unknown (native tool post-hook).
 
-### prunesh.json manifest
+### prunesh.toml manifest
 
-Every plugin ships a `prunesh.json` at the repo root:
+Every plugin ships a `prunesh.toml` at the repo root:
 
-```json
-{
-  "id": "author/<cmd>",
-  "command": "<argv0>",
-  "platforms": ["linux/amd64", "darwin/arm64"],
-  "contract": "stdin/v1",
-  "prunesh-core-version": {
-    "version": "0.11.0",
-    "constraint": "min"
-  }
-}
+```toml
+id = "author/<cmd>"
+command = "<argv0>"
+platforms = ["linux/amd64", "darwin/arm64"]
+contract = "stdin/v1"
+
+[prunesh-core-version]
+version = "0.11.0"
+constraint = "min"  # "min" = running prunesh >= version, "exact" = must match
 ```
 
 `contract` must be `stdin/v1`. `constraint` is `"min"` (running prunesh >= version) or `"exact"` (must match). On install, the core validates the manifest and runs a contract check (sends `rewrite` and `filter_output` probes and expects valid JSON back) before writing anything to the registry.

@@ -2,20 +2,20 @@
 
 Compared against [rtk-ai/rtk](https://github.com/rtk-ai/rtk) `0.42.4` (`ba7a9ce`). prunesh is at `0.11.0-beta.2`.
 
-**Product decision (2026-08-17):** gtk follows the same path as rtk. It rewrites the command **before** execution (`PreToolUse` → `git status` becomes `prunesh git status`). prunesh runs the real binary, injects flags, and filters the output. Post-filtering remains only for Claude Code native tools that do not go through Bash (`Read`, MCP, `Grep`, `Glob`).
+**Product decision (2026-08-17):** prunesh follows the same path as rtk. It rewrites the command **before** execution (`PreToolUse` → `git status` becomes `prunesh git status`). prunesh runs the real binary, injects flags, and filters the output. Post-filtering remains only for Claude Code native tools that do not go through Bash (`Read`, MCP, `Grep`, `Glob`).
 
 ---
 
 ## 1. Primary — PreToolUse rewrite (proxy)
 
-Today gtk filters *after* the fact. `Module.Rewrite` exists and is never called. That is the design gap, not a missing command catalog.
+Today prunesh filters *after* the fact. `Module.Rewrite` exists and is never called. That is the design gap, not a missing command catalog.
 
 ### Target flow
 
 ```text
-Without gtk:  Claude --git status--> shell --> git --> raw stdout --> Claude
+Without prunesh:  Claude --git status--> shell --> git --> raw stdout --> Claude
 
-With gtk:     Claude --git status--> PreToolUse --> prunesh hook-pre
+With prunesh:     Claude --git status--> PreToolUse --> prunesh hook-pre
                                                        |
                                                        v
                                           command: prunesh git status
@@ -42,7 +42,7 @@ Claude never sees the rewrite. The agent calls `git status`; the hook replaces i
 | `PostToolUse` | Stays for `Read`, `mcp__*`, and later `Grep`/`Glob`. It is not the Bash path. |
 | Repo phases | Still two pieces: the plugin registers hooks; the binary filters and now also executes. They stay separate. |
 
-Do not copy from rtk: multi-agent `rtk init`, the TOML engine, `discover`/`learn`, telemetry, on-disk `tee`. gtk stays heuristic (truncation, grouping, stripping).
+Do not copy from rtk: multi-agent `rtk init`, the TOML engine, `discover`/`learn`, telemetry, on-disk `tee`. prunesh stays heuristic (truncation, grouping, stripping).
 
 ### Scope of this phase
 
@@ -197,21 +197,21 @@ Exact transport (Go package, manifest + subprocess, …) is an implementation de
 
 - Not a Claude Code plugin per filter.
 - Not rtk’s TOML rule engine.
-- Not auto-discovery from PATH or GitHub without an explicit `filter install`.
+- Not auto-discovery from PATH or GitHub without an explicit `plugin install`.
 
 Third-party filters are installed into prunesh’s filter registry; they do not register agent hooks.
 
 Done when: native `prunesh/*` filters use the same registry; install/uninstall/list work; conflict and uninstall semantics above have tests; `hook-pre` resolves the active filter by shell command before rewrite.
 
-**Status (0.11.x beta):** registry, `filter install|uninstall|list`, conflict/`--replace` semantics, active resolution, and subprocess transport are implemented. [prunesh/date](https://github.com/prunesh/date) is the first external-only filter and the reference template (`prunesh/<cmd>`). Remaining built-ins migrate gradually (see below and ARCHITECTURE.md § Built-in migration).
+**Status (0.11.x beta):** registry, `plugin install|uninstall|list`, conflict/`--replace` semantics, active resolution, and subprocess transport are implemented. [prunesh/date](https://github.com/prunesh/date) is the first external-only filter and the reference template (`prunesh/<cmd>`). Remaining built-ins migrate gradually (see the Built-in migration roadmap below).
 
 ### Built-in migration roadmap
 
-Each row is one external repository. One repo per shell argv0 (or a small group when they share the same implementation). Template: [prunesh/date](https://github.com/prunesh/date) + [HOWTO.md](https://github.com/prunesh/date/blob/main/HOWTO.md).
+Each row is one external repository. One repo per shell argv0 (or a small group when they share the same implementation). Template: [prunesh/date](https://github.com/prunesh/date).
 
 **Per-filter steps:**
 
-1. Publish `github.com/prunesh/<cmd>` with `prunesh.json` (`command`, `stdin/v1`, semver constraint).
+1. Publish `github.com/prunesh/<cmd>` with `prunesh.toml` (`command`, `stdin/v1`, semver constraint).
 2. Users install it with `prunesh plugin install <module@version>`.
 3. External plugin shadows the built-in (active = most recent install).
 4. Remove the blank import from `cmd/prunesh/main.go` only when the command should require an external install (as with `date`).

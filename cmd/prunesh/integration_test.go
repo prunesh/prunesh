@@ -5,7 +5,6 @@
 package main_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -14,6 +13,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/BurntSushi/toml"
 	"github.com/prunesh/prunesh/internal/plugininstall"
 	"github.com/prunesh/prunesh/internal/pluginmanifest"
 	"github.com/prunesh/prunesh/internal/projectmarker"
@@ -253,7 +253,7 @@ func installTestDatePlugin(t *testing.T) string {
 			Constraint: "min",
 		},
 	}
-	manifestData, _ := json.Marshal(manifest)
+	manifestData, _ := toml.Marshal(manifest)
 	if err := os.WriteFile(filepath.Join(dir, pluginmanifest.ManifestFileName), manifestData, 0o644); err != nil {
 		t.Fatal(err)
 	}

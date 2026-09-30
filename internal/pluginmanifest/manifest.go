@@ -1,13 +1,13 @@
-// Package pluginmanifest parses and validates external plugin manifests (prunesh.json).
+// Package pluginmanifest parses and validates external plugin manifests (prunesh.toml).
 package pluginmanifest
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"regexp"
 	"strings"
 
+	"github.com/BurntSushi/toml"
 	"golang.org/x/mod/semver"
 )
 
@@ -59,32 +59,32 @@ func platformListed(platforms []string, platform string) bool {
 }
 
 // ManifestFileName is the required manifest filename at the root of a filter repository.
-const ManifestFileName = "prunesh.json"
+const ManifestFileName = "prunesh.toml"
 
-// Manifest is the required prunesh.json schema for external plugins.
+// Manifest is the required prunesh.toml schema for external plugins.
 type Manifest struct {
-	ID               string           `json:"id"`
-	Command          string           `json:"command"`
-	Platforms        []string         `json:"platforms"`
-	Contract         string           `json:"contract"`
-	PruneshCoreVersion PruneshCoreVersion `json:"prunesh-core-version"`
+	ID                 string             `toml:"id"`
+	Command            string             `toml:"command"`
+	Platforms          []string           `toml:"platforms"`
+	Contract           string             `toml:"contract"`
+	PruneshCoreVersion PruneshCoreVersion `toml:"prunesh-core-version"`
 }
 
 // PruneshCoreVersion declares which prunesh core versions may run this filter.
 type PruneshCoreVersion struct {
-	Version    string `json:"version"`
-	Constraint string `json:"constraint"`
+	Version    string `toml:"version"`
+	Constraint string `toml:"constraint"`
 }
 
-// ParseFile reads and unmarshals prunesh.json at path.
+// ParseFile reads and decodes prunesh.toml at path.
 func ParseFile(path string) (*Manifest, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("read prunesh.json: %w", err)
+		return nil, fmt.Errorf("read prunesh.toml: %w", err)
 	}
 	var m Manifest
-	if err := json.Unmarshal(data, &m); err != nil {
-		return nil, fmt.Errorf("parse prunesh.json: %w", err)
+	if err := toml.Unmarshal(data, &m); err != nil {
+		return nil, fmt.Errorf("parse prunesh.toml: %w", err)
 	}
 	return &m, nil
 }

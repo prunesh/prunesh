@@ -133,7 +133,7 @@ func TestValidatePruneshCoreVersionMinPrereleaseBelowBase(t *testing.T) {
 }
 
 func TestParseDateManifest(t *testing.T) {
-	// Requires github.com/prunesh/date to be published. Skip until marketplace migration completes.
+	// Requires github.com/prunesh/date to be published. Skipped automatically when the module is not available.
 	const dateModule = "github.com/prunesh/date@v0.13.0"
 	if _, err := downloadModuleDir(dateModule); err != nil {
 		t.Skip(dateModule + " not yet published")
@@ -144,7 +144,7 @@ func TestParseDateManifest(t *testing.T) {
 	}
 	manifestPath := filepath.Join(dir, pluginmanifest.ManifestFileName)
 	if _, err := os.Stat(manifestPath); os.IsNotExist(err) {
-		t.Skip(dateModule + " does not include prunesh.json")
+		t.Skip(dateModule + " does not include prunesh.toml")
 	} else if err != nil {
 		t.Fatal(err)
 	}

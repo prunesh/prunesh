@@ -29,7 +29,7 @@ func TestInstallAndActive(t *testing.T) {
 		Argv0:        "date",
 		Contract:     "subprocess/v1",
 		BinaryPath:   filepath.Join(home, "date"),
-		ManifestPath: filepath.Join(home, "prunesh.json"),
+		ManifestPath: filepath.Join(home, "prunesh.toml"),
 		InstalledAt:  time.Now(),
 	}
 	if err := db.Install(rec); err != nil {
@@ -68,7 +68,7 @@ func TestUninstallRemovesFilter(t *testing.T) {
 		Argv0:        "date",
 		Contract:     "subprocess/v1",
 		BinaryPath:   filepath.Join(home, "date"),
-		ManifestPath: filepath.Join(home, "prunesh.json"),
+		ManifestPath: filepath.Join(home, "prunesh.toml"),
 		InstalledAt:  time.Now(),
 	}
 	if err := db.Install(rec); err != nil {
@@ -107,7 +107,7 @@ func TestUninstallPromotesPreviousActive(t *testing.T) {
 		Argv0:        "date",
 		Contract:     "subprocess/v1",
 		BinaryPath:   filepath.Join(home, "acme-date"),
-		ManifestPath: filepath.Join(home, "acme-prunesh.json"),
+		ManifestPath: filepath.Join(home, "acme-prunesh.toml"),
 		InstalledAt:  time.Now().Add(-time.Hour),
 	}
 	newer := pluginregistry.Record{
@@ -117,7 +117,7 @@ func TestUninstallPromotesPreviousActive(t *testing.T) {
 		Argv0:        "date",
 		Contract:     "subprocess/v1",
 		BinaryPath:   filepath.Join(home, "date"),
-		ManifestPath: filepath.Join(home, "prunesh.json"),
+		ManifestPath: filepath.Join(home, "prunesh.toml"),
 		InstalledAt:  time.Now(),
 	}
 	if err := db.Install(older); err != nil {
@@ -173,7 +173,7 @@ func TestMigrateFromFiltersTable(t *testing.T) {
 			binary_path TEXT NOT NULL, manifest_path TEXT NOT NULL,
 			installed_at INTEGER NOT NULL
 		);
-		INSERT INTO filters VALUES ('prunesh/date','github.com/prunesh/date','v0.1.0','date','stdin/v1','/tmp/date','/tmp/prunesh.json',1000);
+		INSERT INTO filters VALUES ('prunesh/date','github.com/prunesh/date','v0.1.0','date','stdin/v1','/tmp/date','/tmp/prunesh.toml',1000);
 	`)
 	legacyDB.Close()
 	if err != nil {

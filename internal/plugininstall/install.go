@@ -42,7 +42,7 @@ func ParseRef(ref string) (module, version string, err error) {
 	return ref[:i], ref[i+1:], nil
 }
 
-// Install downloads or builds the filter, validates prunesh.json, and registers it.
+// Install downloads or builds the filter, validates prunesh.toml, and registers it.
 func Install(opts Options) (*pluginregistry.Record, error) {
 	if opts.Module == "" {
 		return nil, fmt.Errorf("module is empty")
@@ -128,7 +128,7 @@ func checkReplaceConflict(db *pluginregistry.DB, id, argv0 string, replace bool)
 		return nil
 	}
 	if !replace {
-		return fmt.Errorf("active filter %s already handles %q; use --replace to install %s (or filter uninstall %s)", prev.ID, argv0, id, prev.ID)
+		return fmt.Errorf("active filter %s already handles %q; use --replace to install %s (or plugin uninstall %s)", prev.ID, argv0, id, prev.ID)
 	}
 	fmt.Fprintf(os.Stderr, "replacing active filter %s with %s for command %q\n", prev.ID, id, argv0)
 	return nil
