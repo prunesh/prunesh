@@ -69,7 +69,7 @@ the marketplace — do not open a PR here to ship a niche command.
 
 - Authoring: [Writing a plugin](https://github.com/prunesh/prunesh#writing-a-plugin)
 - Publish flow: publish a GitHub release with the binary and a `prunesh.toml`; install with `prunesh plugin install github.com/<user>/<repo>@<version>`
-- Catalog: https://prunesh.github.io/marketplace
+- Catalog: https://prunesh.github.io/prunesh/marketplace/
 
 ## Version bumps (maintainers)
 

@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://prunesh.github.io/prunesh">Website</a> ·
-  <a href="https://prunesh.github.io/marketplace">Marketplace</a> ·
+  <a href="https://prunesh.github.io/prunesh/marketplace/">Marketplace</a> ·
   <a href="#quick-start">Quick Start</a> ·
   <a href="#how-it-works">How it works</a> ·
   <a href="#benchmark">Benchmark</a> ·
@@ -163,7 +163,7 @@ All built-in modules ship with the binary.
 
 ## Marketplace plugins
 
-Discover and install external plugins from the [prunesh marketplace](https://prunesh.github.io/marketplace).
+Discover and install external plugins from the [prunesh marketplace](https://prunesh.github.io/prunesh/marketplace/).
 
 ```bash
 # Install latest from the marketplace
