@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://prunesh.github.io/prunesh">Website</a> ·
-  <a href="https://prunesh.github.io/marketplace">Marketplace</a> ·
+  <a href="https://prunesh.github.io/prunesh/plugins/">Plugins</a> ·
   <a href="#quick-start">Quick Start</a> ·
   <a href="#how-it-works">How it works</a> ·
   <a href="#benchmark">Benchmark</a> ·
@@ -161,9 +161,9 @@ All built-in modules ship with the binary.
 | `python` / `python3` | `python`, `python3` | Delegates `-m pytest` invocations to the pytest filter |
 | `gain` | — | SQLite analytics: recorded on each proxy run |
 
-## Marketplace plugins
+## Plugins
 
-Discover and install external plugins from the [prunesh marketplace](https://prunesh.github.io/marketplace).
+Discover and install external plugins from the [prunesh plugins catalog](https://prunesh.github.io/prunesh/plugins/).
 
 ```bash
 # Install latest from the marketplace

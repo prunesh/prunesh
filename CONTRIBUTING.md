@@ -62,14 +62,14 @@ stripping, line caps. No model calls, no semantic compression.
 
 See the README section **Adding a built-in module** for a minimal skeleton.
 
-## Marketplace plugins
+## Community plugins
 
 External plugins speak `stdin/v1` over JSON stdin/stdout. Publish them through
 the marketplace — do not open a PR here to ship a niche command.
 
 - Authoring: [Writing a plugin](https://github.com/prunesh/prunesh#writing-a-plugin)
 - Publish flow: publish a GitHub release with the binary and a `prunesh.toml`; install with `prunesh plugin install github.com/<user>/<repo>@<version>`
-- Catalog: https://prunesh.github.io/marketplace
+- Plugins catalog: https://prunesh.github.io/prunesh/plugins/
 
 ## Version bumps (maintainers)
 
